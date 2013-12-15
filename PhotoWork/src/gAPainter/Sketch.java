@@ -9,22 +9,6 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class Sketch {
-
-	/**
-	 * @param args
-	 * @throws IOException 
-	 */
-	public static void main(String[] args) throws IOException {
-		
-		Sketch s = new Sketch(200,200,100);
-		ImageIO.write(s.getIm(), "jpg", new File("C:/Users/Olivier/Desktop/mutation/image"+0+".jpg"));
-		
-		for(int i=1; i<1000; i++) {
-			s.mutate();
-			ImageIO.write(s.getIm(), "jpg", new File("C:/Users/Olivier/Desktop/mutation/image"+i+".jpg"));
-		}
-		
-	}
 	
 	static boolean isTriangle = false;;
 	
@@ -75,9 +59,12 @@ public class Sketch {
 		
 		int newSize = (int)(2*ratio*pop);
 		Shape[] newShapes = new Shape[newSize];
-		for(int j=0, i=0; i<newSize; j++){
-			if(Math.random()<ratio) { newShapes[i]= this.shapes[j]; i++;}
-			if((Math.random()<ratio)&&(i<newSize)) { newShapes[i]= this.shapes[j]; i++;}
+		int k = 0;
+		for(int i=0; i<newSize;i++){
+			if(k>=pop){k=0;}
+			if(Math.random()<0.5){ newShapes[i]=this.shapes[k]; }
+			else { newShapes[i]=other.shapes[k]; }
+			k++;
 		}
 		this.shapes = newShapes;
 	}

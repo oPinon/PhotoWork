@@ -20,9 +20,7 @@ public class Painter {
 		Sketch.isTriangle = false;
 		
 		Painter p = new Painter(source);
-		int processors = Runtime.getRuntime().availableProcessors();
-		System.out.println(processors);
-
+		
 		Display d = new Display(source);
 		int i=0;
 		long t = System.currentTimeMillis();
@@ -55,6 +53,7 @@ public class Painter {
 
 		Sketch s2 = new Sketch(s);
 		s2.mutate();
+		s2.merge(s, 0.5);
 		int fitness2 = getDiff(s2.getIm());
 		if(fitness2<fitness) {
 			fitness=fitness2;
