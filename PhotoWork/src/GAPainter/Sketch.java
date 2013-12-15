@@ -68,6 +68,20 @@ public class Sketch {
 		//updateImage();
 	}
 	
+	/*
+	 * ratio is the percentage of each parent's DNA you keep. A ratio of 0.5 will keep the DNA's size.
+	 */
+	public void merge(Sketch other, double ratio) {
+		
+		int newSize = (int)(2*ratio*pop);
+		Shape[] newShapes = new Shape[newSize];
+		for(int j=0, i=0; i<newSize; j++){
+			if(Math.random()<ratio) { newShapes[i]= this.shapes[j]; i++;}
+			if((Math.random()<ratio)&&(i<newSize)) { newShapes[i]= this.shapes[j]; i++;}
+		}
+		this.shapes = newShapes;
+	}
+	
 	public BufferedImage render(int scale) {
 		BufferedImage img = new BufferedImage(width*scale,height*scale,BufferedImage.TYPE_INT_RGB);
 		Graphics g = img.getGraphics();
