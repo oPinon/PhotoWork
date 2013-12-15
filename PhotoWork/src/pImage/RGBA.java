@@ -1,4 +1,4 @@
-package PImage;
+package pImage;
 
 public class RGBA implements PColor {
 

@@ -1,4 +1,4 @@
-package GAPainter;
+package gAPainter;
 import java.awt.Graphics;
 
 

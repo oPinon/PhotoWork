@@ -1,4 +1,4 @@
-package GAPainter;
+package gAPainter;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
@@ -16,7 +16,7 @@ public class Painter {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		BufferedImage source = ImageIO.read( new File("ds.png"));
+		BufferedImage source = ImageIO.read( new File("monaLisa.png"));
 		Sketch.isTriangle = false;
 		
 		Painter p = new Painter(source);

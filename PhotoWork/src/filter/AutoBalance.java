@@ -1,4 +1,4 @@
-package PImage;
+package filter;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -6,7 +6,11 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-public class autoBalance {
+import pImage.PColor;
+import pImage.PImage;
+import pImage.RGB;
+
+public class AutoBalance {
 	
 	public static void main(String[] args) throws IOException {
 		BufferedImage image_source = ImageIO.read(new File("test.jpg"));
@@ -17,7 +21,7 @@ public class autoBalance {
 		System.out.println("MinMax done in "+(System.currentTimeMillis()-t0)+" ms");
 	}
 
-	static PImage balance(PImage img) {
+	public static PImage balance(PImage img) {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		int[] temp = getMinMax(img);
@@ -34,7 +38,7 @@ public class autoBalance {
 		return toReturn;
 	}
 
-	static PImage balanceColors(PImage img) {
+	public static PImage balanceColors(PImage img) {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		
@@ -66,7 +70,7 @@ public class autoBalance {
 		return toReturn;
 	}
 	
-	static PImage balanceColors(PImage img, int blurSize) {
+	public static PImage balanceColors(PImage img, int blurSize) {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		PImage blurred = BlurFilter.blur(img, blurSize);
@@ -105,7 +109,7 @@ public class autoBalance {
 		return Math.max(Math.min(pure, 255), 0);
 	}
 	
-	static int[] getMinMax(PImage img) {
+	public static int[] getMinMax(PImage img) {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		int minV = Integer.MAX_VALUE; int maxV = Integer.MIN_VALUE;

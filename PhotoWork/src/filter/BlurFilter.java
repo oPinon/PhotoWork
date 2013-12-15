@@ -1,8 +1,11 @@
-package PImage;
+package filter;
+
+import pImage.PImage;
+import pImage.RGB;
 
 public class BlurFilter {
 
-	static PImage blur(PImage image, int blurSize) {
+	public static PImage blur(PImage image, int blurSize) {
 			long t0 = System.currentTimeMillis();
 		PImage expanded = expand(image,blurSize);
 			System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
@@ -27,7 +30,7 @@ public class BlurFilter {
 		return cut(blurred,blurSize);
 	}
 
-	static PImage expand(PImage image, int pixels) {
+	public static PImage expand(PImage image, int pixels) {
 
 		int width = image.width(); int height = image.height();
 		PImage toReturn = new PImage(width+2*pixels,height+2*pixels);
@@ -59,7 +62,7 @@ public class BlurFilter {
 		return toReturn;
 	}
 
-	static PImage cut(PImage image, int pixels) {
+	public static PImage cut(PImage image, int pixels) {
 		int width = image.width(); int height = image.height();
 		PImage toReturn = new PImage(width-2*pixels,height-2*pixels);
 		for(int x = 0; x< toReturn.width(); x++) {

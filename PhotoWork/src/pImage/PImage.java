@@ -1,4 +1,4 @@
-package PImage;
+package pImage;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
