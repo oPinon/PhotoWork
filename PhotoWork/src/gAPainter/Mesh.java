@@ -5,15 +5,19 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import pImage.*;
+
 public class Mesh {
 	
 	private BufferedImage source, render;
+	private PImage src;
 	private ArrayList<Vertex> vertices;
 	private ArrayList<Face> faces;
 	int width, height, N;
 	
 	public Mesh(BufferedImage source, int N){
 		this.source = source;
+		src = new PImage(source);
 		this.width = source.getWidth(); this.height = source.getHeight(); this.N = N;
 		render = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
 		vertices = new ArrayList<Vertex>();
@@ -44,6 +48,7 @@ public class Mesh {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, width, height);
 		for(Face f : faces){
+			f.setColor(src);
 			f.paint(g);
 		}
 		g.dispose();
