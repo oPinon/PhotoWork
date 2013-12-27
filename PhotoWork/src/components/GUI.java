@@ -84,6 +84,7 @@ public class GUI extends Composite {
 	//Nom de la fonction sélectionnée
 	String selectedFunction;
 
+
 	//Auto-Balance et Blur
 	int autoBalanceType;//Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
 	Spinner blurSize;
@@ -99,7 +100,8 @@ public class GUI extends Composite {
 
 	//Menu Préférences
 	PreferencesMenu preferences;
-	int[] imagesToModify= {0};
+	boolean workOnAllFiles= true;
+	int nbThreads= PreferencesMenu.AVAILABLE_THREADS;
 
 
 	public GUI(Composite parent, int style) {
@@ -136,7 +138,11 @@ public class GUI extends Composite {
 					mb.open();
 					return;
 				}
-				savedImages[selectedImageNumber]= new Image(display, originalImages[selectedImageNumber], SWT.IMAGE_COPY);				
+
+				if(workOnAllFiles){
+					for(int i=0; i<savedImages.length; i++) savedImages[i]= new Image(display, originalImages[i], SWT.IMAGE_COPY);	
+				}
+				else savedImages[selectedImageNumber]= new Image(display, originalImages[selectedImageNumber], SWT.IMAGE_COPY);
 				resizeImage(savedImages[selectedImageNumber]);
 			}
 		});
@@ -236,10 +242,16 @@ public class GUI extends Composite {
 		btnPreferences.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				btnPreferences.setEnabled(false);
+				if(image == null){ 
+					MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
+					mb.setText("Warning");
+					mb.setMessage("Please select a file to work on");
+					mb.open();
+					return;
+				}
 
-				Shell prefShell= new Shell(shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-				preferences= new PreferencesMenu(fileNames, savedImages, prefShell, SWT.NONE);
+				final Shell prefShell= new Shell(shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+				preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, prefShell, SWT.NONE);
 				prefShell.setText("Preferences");	
 				prefShell.setLayout(new FillLayout());
 				prefShell.setSize(400,400); 
@@ -251,25 +263,18 @@ public class GUI extends Composite {
 
 				prefShell.addListener(SWT.Close, new Listener() {
 					public void handleEvent(Event event) {
-						imagesToModify= preferences.list.getSelectionIndices();
+						infoLabel.setText("Preferences changes saved");
+						workOnAllFiles= preferences.areAllFilesSelected();
+						nbThreads= preferences.getNbThreads();
 					}
 				});
 
-
-				// run the event loop as long as the window is open
 				while (!prefShell.isDisposed()) {
-					// read the next OS event queue and transfer it to a SWT event 
-					if (!display.readAndDispatch())
-					{
-						// if there are currently no other OS event to process
-						// sleep until the next OS event is available 
-						display.sleep();
-					}
+					if (!display.readAndDispatch())	display.sleep();
 				}
 
 				// disposes all associated windows and their components
-				prefShell.dispose();
-				btnPreferences.setEnabled(true);
+				//	prefShell.dispose();
 			}
 		});
 
@@ -663,34 +668,52 @@ public class GUI extends Composite {
 			return;
 		}
 
+		Image[] imagesToModify;
+		int count;
+		if(!workOnAllFiles){
+			imagesToModify= new Image[1];
+			count= selectedImageNumber;
+			imagesToModify[0]= savedImages[count];
+		}
+		else {
+			imagesToModify= savedImages;
+			count= 0;
+		}
+
 		switch(selectedFunction){
 		case "Auto Balance":
-			//			for(int i: imagesToModify){
-			//				ImageData id= savedImages[i].getImageData();
-			//				if(autoBalanceType==1 && blurSize.isEnabled()) autoBalanceType=2;
-			//				PImage output;
-			//				switch(autoBalanceType){
-			//				case 0: output=AutoBalance.balance(new PImage(FormatConversion.convertToAWT(id)));break;
-			//				case 1: output=AutoBalance.balanceColors(new PImage(FormatConversion.convertToAWT(id)));break;	
-			//				case 2: output=AutoBalance.balanceColors(new PImage(FormatConversion.convertToAWT(id)),blurSize.getSelection());break;
-			//				default: output=new PImage(0,0);
-			//			}
-			//				savedImages[i]= new Image(getDisplay(),FormatConversion.convertToSWT(output.getImage()));
-			//				if(i==selectedImageNumber) resizeImage(savedImages[i]);
-			//				infoLabel.setText(infoLabel.getText()+"Done for image"+i+"\n");
-			//			}
+			for(Image i: imagesToModify){
+				ImageData id= i.getImageData();
+				if(autoBalanceType==1 && blurSize.isEnabled()) autoBalanceType= 2;
+				PImage output;
+
+				switch(autoBalanceType){
+				case 0: output=AutoBalance.balance(new PImage(FormatConversion.convertToAWT(id)), nbThreads);                    break;
+				case 1: output=AutoBalance.balanceColors(new PImage(FormatConversion.convertToAWT(id)));						 break;	
+				case 2: output=AutoBalance.balanceColors(new PImage(FormatConversion.convertToAWT(id)),blurSize.getSelection()); break;
+				default: output= new PImage(0,0);
+				}
+
+				i= new Image(getDisplay(),FormatConversion.convertToSWT(output.getImage()));
+				savedImages[count]= i;
+				infoLabel.setText(infoLabel.getText()+"Done for image"+count+"\n");
+				count++;
+			}
+			resizeImage(savedImages[selectedImageNumber]);
 			break;
 
 		case "Blur":
-			//			for(int i: imagesToModify){
-			//				ImageData id= savedImages[i].getImageData();
-			//				PImage output;
-			//				output=BlurFilter.blur(new PImage(FormatConversion.convertToAWT(id)),blurSize.getSelection());
-			//					
-			//				savedImages[i]= new Image(getDisplay(),FormatConversion.convertToSWT(output.getImage()));
-			//				if(i==selectedImageNumber) resizeImage(savedImages[i]);
-			//				infoLabel.setText(infoLabel.getText()+"Done for image"+i+"\n");
-			//			}
+			for(Image i: imagesToModify){
+
+				ImageData id= i.getImageData();
+				PImage output= BlurFilter.blur(new PImage(FormatConversion.convertToAWT(id)),blurSize.getSelection());
+
+				i= new Image(getDisplay(),FormatConversion.convertToSWT(output.getImage()));
+				savedImages[count]= i;
+				infoLabel.setText(infoLabel.getText()+"Done for image "+count+"\n");
+				count++;
+			}
+			resizeImage(savedImages[selectedImageNumber]);
 			break;
 
 		case "Scan":
