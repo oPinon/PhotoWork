@@ -150,7 +150,7 @@ public class AutoBalance {
 	public static void getColors(final PImage img,final int[] R,final int[] G,final int[] B, int nbThreads) {
 		Thread[] threads = new Thread[nbThreads];
 		final int step = img.width()/nbThreads;
-		for (int i = 0; i < threads.length-1; i++) {
+		for (int i = 0; i < threads.length; i++) {
 			final int threadNumber = i;
 			threads[i]= new Thread(){
 				public void run() {
@@ -159,7 +159,7 @@ public class AutoBalance {
 			};
 			threads[i].start();
 		}
-		for (int i = 0; i < threads.length-1; i++) {
+		for (int i = 0; i < threads.length; i++) {
 			try { threads[i].join(); }
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
