@@ -1,4 +1,4 @@
-package components;
+package display;
 
 import gAPainter.Painter;
 
@@ -282,7 +282,7 @@ public class GUI extends Composite {
 					if (!display.readAndDispatch())	display.sleep();
 				}
 
-				// disposes all associated windows and their components
+				// disposes all associated windows and their display
 				//	prefShell.dispose();
 			}
 		});
@@ -803,7 +803,7 @@ public class GUI extends Composite {
 
 	@Override
 	protected void checkSubclass() {
-		// Disable the check that prevents subclassing of SWT components
+		// Disable the check that prevents subclassing of SWT display
 	}
 
 	public static void main(String[] args){
@@ -830,7 +830,7 @@ public class GUI extends Composite {
 				display.sleep();
 			}
 		}
-		// disposes all associated windows and their components
+		// disposes all associated windows and their display
 		display.dispose();
 		System.exit(0);
 	}

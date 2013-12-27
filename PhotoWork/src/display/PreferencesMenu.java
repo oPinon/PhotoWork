@@ -1,4 +1,4 @@
-package components;
+package display;
 
 import java.util.Set;
 
@@ -131,7 +131,7 @@ public class PreferencesMenu extends Composite {
 
 	@Override
 	protected void checkSubclass() {
-		// Disable the check that prevents subclassing of SWT components
+		// Disable the check that prevents subclassing of SWT display
 	}
 
 }
