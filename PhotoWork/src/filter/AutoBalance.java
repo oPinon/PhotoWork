@@ -147,10 +147,10 @@ public class AutoBalance {
 		synchronized(B){ for(int i=0;i<256;i++) { B[i]+=rB[i]; } }
 	}
 	
-	public static void getColors(final PImage img,final int[] R,final int[] G,final int[] B, int nbThreads) {
+	public static void getColors(final PImage img,final int[] R,final int[] G,final int[] B, final int nbThreads) {
 		Thread[] threads = new Thread[nbThreads];
 		final int step = img.width()/nbThreads;
-		for (int i = 0; i < threads.length; i++) {
+		for (int i = 0; i < threads.length-1; i++) {
 			final int threadNumber = i;
 			threads[i]= new Thread(){
 				public void run() {
@@ -159,6 +159,13 @@ public class AutoBalance {
 			};
 			threads[i].start();
 		}
+		threads[nbThreads-1] = new Thread(){
+			public void run() {
+				getColors(img, R, G, B, (nbThreads-1)*step, img.width(), 0, img.height());
+			}
+		};
+		threads[nbThreads-1].start();
+				
 		for (int i = 0; i < threads.length; i++) {
 			try { threads[i].join(); }
 			catch (InterruptedException e) { e.printStackTrace(); }
