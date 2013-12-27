@@ -1,5 +1,7 @@
 package components;
 
+import gAPainter.Painter;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,14 +35,14 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.custom.ScrolledComposite;
 
+import pImage.AutoBalance;
+import pImage.BlurFilter;
 import pImage.PImage;
 import pImage.Scanner;
-import filter.AutoBalance;
-import filter.BlurFilter;
-import gAPainter.Painter;
+import org.eclipse.swt.custom.CLabel;
 
 public class GUI extends Composite {
 	
@@ -61,7 +63,7 @@ public class GUI extends Composite {
 	Label infoLabel;
 	Label zoomLabel;
 	
-	Label imageNumber;
+	CLabel imageNumber;
 	int selectedImageNumber;
 	
 	//Données sur l'affichage d'image
@@ -105,18 +107,45 @@ public class GUI extends Composite {
 		setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 4));
 		setLayout(new GridLayout(6, true));
 		setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION));
-
-
-		titleLabel= new Label(this, SWT.NONE);
-		titleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
-		titleLabel.setText("No image selected");
-		titleLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+				
+				Composite composite_2 = new Composite(this, SWT.NONE);
+				composite_2.setLayout(new GridLayout(2, false));
+				composite_2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+				
+				
+						titleLabel= new Label(composite_2, SWT.NONE);
+						titleLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+						titleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
+						titleLabel.setText("No image selected");
+								
+										Button btnNewButton_4 = new Button(composite_2, SWT.NONE);
+										GridData gd_btnNewButton_4 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+										gd_btnNewButton_4.heightHint = 29;
+										btnNewButton_4.setLayoutData(gd_btnNewButton_4);
+										btnNewButton_4.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
+										btnNewButton_4.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.NORMAL));
+										btnNewButton_4.setImage(new Image(display,"images/undo.png"));
+										btnNewButton_4.setText("Undo");
+										btnNewButton_4.addSelectionListener(new SelectionAdapter() {
+											@Override
+											public void widgetSelected(SelectionEvent arg0) {
+												if(image == null){ 
+													MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
+													mb.setText("Warning");
+													mb.setMessage("Please select a file to work on");
+													mb.open();
+													return;
+												}
+												savedImages[selectedImageNumber]= new Image(display, originalImages[selectedImageNumber], SWT.IMAGE_COPY);				
+												resizeImage(savedImages[selectedImageNumber]);
+											}
+										});
 
 
 		Button btnLoadFiles = new Button(this, SWT.NONE);
 		GridData gd_btnLoadFiles = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_btnLoadFiles.heightHint = 25;
-		gd_btnLoadFiles.widthHint = 200;
+		gd_btnLoadFiles.widthHint = 100;
 		btnLoadFiles.setLayoutData(gd_btnLoadFiles);
 		btnLoadFiles.setText("Load File(s)");
 		btnLoadFiles.addSelectionListener(new SelectionAdapter() {
@@ -171,7 +200,7 @@ public class GUI extends Composite {
 
 		Composite composite_1 = new Composite(this, SWT.NONE);
 		composite_1.setLayout(new FillLayout(SWT.HORIZONTAL));
-		GridData gd_composite_1 = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		GridData gd_composite_1 = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
 		gd_composite_1.widthHint = 150;
 		composite_1.setLayoutData(gd_composite_1);
 
@@ -186,8 +215,8 @@ public class GUI extends Composite {
 			}
 		});
 
-		imageNumber = new Label(composite_1, SWT.CENTER);
-		imageNumber.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
+		imageNumber = new CLabel(composite_1, SWT.CENTER);
+		imageNumber.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		imageNumber.setText("0/0");
 
 		Button btnNewButton_6 = new Button(composite_1, SWT.ARROW | SWT.RIGHT);
@@ -246,7 +275,7 @@ public class GUI extends Composite {
 
 		Group composite = new Group(this, SWT.NONE);
 		composite.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.BOLD));
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 1));
 		composite.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		composite.setLayout(new FillLayout(SWT.VERTICAL));
 		composite.setText("Menu");
@@ -329,26 +358,6 @@ public class GUI extends Composite {
 			}
 		});
 
-		Button btnNewButton_4 = new Button(composite, SWT.NONE);
-		btnNewButton_4.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
-		btnNewButton_4.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.NORMAL));
-		btnNewButton_4.setImage(new Image(display,"images/undo.png"));
-		btnNewButton_4.setText("Undo");
-		btnNewButton_4.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent arg0) {
-				if(image == null){ 
-					MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
-					mb.setText("Warning");
-					mb.setMessage("Please select a file to work on");
-					mb.open();
-					return;
-				}
-				savedImages[selectedImageNumber]= new Image(display, originalImages[selectedImageNumber], SWT.IMAGE_COPY);				
-				resizeImage(savedImages[selectedImageNumber]);
-			}
-		});
-
 		scrolledComposite = new ScrolledComposite(this, SWT.BORDER | SWT.DOUBLE_BUFFERED |SWT.NO_REDRAW_RESIZE);
 		scrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
 		scrolledComposite.setExpandHorizontal(true);
@@ -403,7 +412,7 @@ public class GUI extends Composite {
 
 		zoomLabel= new Label(this, SWT.NONE);
 		zoomLabel.setText(("Zoom: "+(int) (zoomRatio*100)+"%"));
-		zoomLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
+		zoomLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 
 		Button btnApply = new Button(this, SWT.NONE);
 		btnApply.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD | SWT.ITALIC));
