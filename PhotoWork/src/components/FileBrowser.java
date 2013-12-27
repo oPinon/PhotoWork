@@ -1,7 +1,5 @@
 package components;
 
-import java.io.File;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 
@@ -66,10 +64,10 @@ public class FileBrowser {
 		chosenFiles= new String[]{path};
 
 		switch(dialog.getFileName()){
-		case "PNG": extension=SWT.IMAGE_PNG ;break;
-		case "GIF": extension=SWT.IMAGE_GIF ;break;
-		case "JPEG": extension=SWT.IMAGE_JPEG ;break;
-		default: extension=SWT.IMAGE_PNG ;break;
+		case "PNG": extension= SWT.IMAGE_PNG ;break;
+		case "GIF": extension= SWT.IMAGE_GIF ;break;
+		case "JPEG": extension= SWT.IMAGE_JPEG ;break;
+		default: extension= SWT.IMAGE_PNG ;break;
 		}
 
 		shell.dispose();

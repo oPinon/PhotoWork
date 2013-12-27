@@ -153,7 +153,7 @@ public class GUI extends Composite {
 		gd_btnLoadFiles.heightHint = 25;
 		gd_btnLoadFiles.widthHint = 100;
 		btnLoadFiles.setLayoutData(gd_btnLoadFiles);
-		btnLoadFiles.setText("Load File(s)");
+		btnLoadFiles.setText("Load Files");
 		btnLoadFiles.addSelectionListener(new SelectionAdapter() {
 
 			@Override
@@ -182,7 +182,7 @@ public class GUI extends Composite {
 
 		Button btnSaveFiles = new Button(this, SWT.NONE);
 		btnSaveFiles.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		btnSaveFiles.setText("Save File(s)");
+		btnSaveFiles.setText("Save Files");
 		btnSaveFiles.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
@@ -194,12 +194,21 @@ public class GUI extends Composite {
 					return;
 				}
 				FileBrowser browser= new FileBrowser(display, SWT.SAVE);
-				if(browser.chosenFiles!=null){
+
+				if( browser.chosenFiles!=null){
+					String name= browser.chosenFiles[0];
 					ImageLoader loader = new ImageLoader();
-					loader.data = new ImageData[] {image.getImageData()};
-					if(browser.chosenFiles[0]==null) return;
-					loader.save(browser.chosenFiles[0], browser.extension);
-					infoLabel.setText("Saved in: "+browser.chosenFiles[0]);
+
+					if(!workOnAllFiles || savedImages.length==1){
+						loader.data = new ImageData[] {savedImages[selectedImageNumber].getImageData()};
+						loader.save(name, browser.extension);
+					}
+					else
+						for(int i=0; i<savedImages.length; i++) {
+							loader.data = new ImageData[] {savedImages[i].getImageData()};
+							loader.save((name.substring(0,name.lastIndexOf(".")))+"["+i+"]"+(name.substring(name.lastIndexOf("."))), browser.extension);
+						}
+					infoLabel.setText("Saved in: "+name);
 				}
 			}
 		});
