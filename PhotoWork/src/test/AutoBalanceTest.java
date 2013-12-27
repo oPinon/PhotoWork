@@ -13,7 +13,7 @@ public class AutoBalanceTest {
 
 	public static void main(String[] args) throws IOException {
 		
-		BufferedImage source = ImageIO.read(new File("monaLisa.png"));
+		BufferedImage source = ImageIO.read(new File("monaRaw.png"));
 		PImage img = new PImage(source);
 		int[] R = new int[256];
 		int[] G = new int[256];
@@ -23,7 +23,8 @@ public class AutoBalanceTest {
 		System.out.println("nbThreads = "+nbThreads);
 		for(int i=0;i<256;i++) {System.out.println("value "+i+" : R="+R[i]+" G="+G[i]+" B="+B[i]);}
 		
-		AutoBalance.getMinMax(img, 0, nbThreads);
+		PImage result = AutoBalance.balance(img, nbThreads);
+		new gAPainter.Display(result.getImage());
 	}
 
 }

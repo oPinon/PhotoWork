@@ -107,18 +107,23 @@ public class AutoBalance {
 		int[] R = new int[256];
 		int[] G = new int[256];
 		int[] B = new int[256];
+		
 		getColors(img,R,G,B,nbThreads);
+		
 		for(int min=0;min<256;min++){
-			if(Math.max(R[min], Math.max(G[min], B[min]))>=threshold) {
-				minV = min; break;
+			if(Math.max(R[min], Math.max(G[min], B[min]))>threshold) {
+				minV = min;
+				System.out.println("min = "+min);
+				 break;
 			}
 		}
-		for(int max=255;max>=0;max++){
-			if(Math.max(R[max], Math.max(G[max], B[max]))>=threshold) {
-				maxV = max; break;
+		for(int max=255;max>=0;max--){
+			if(Math.max(R[max], Math.max(G[max], B[max]))>threshold) {
+				maxV = max;
+				System.out.println("max = "+max);
+				break;
 			}
 		}
-		System.out.println("min = "+minV+" and max = "+maxV);
 		return new int[]{ minV, maxV };
 	}
 	
