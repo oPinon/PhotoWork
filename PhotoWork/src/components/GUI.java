@@ -38,8 +38,8 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.eclipse.swt.custom.ScrolledComposite;
 
-import pImage.AutoBalance;
-import pImage.BlurFilter;
+import filter.AutoBalance;
+import filter.BlurFilter;
 import pImage.PImage;
 import pImage.Scanner;
 import org.eclipse.swt.custom.CLabel;
