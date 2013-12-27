@@ -125,4 +125,37 @@ public class AutoBalance {
 		System.out.println("min = "+minV+" and max = "+maxV);
 		return new int[]{ minV, maxV };
 	}
+	
+	private static void getColors(PImage img, int[] R, int[] G, int[] B, int minX, int maxX, int minY, int maxY) {
+		//these arrays will count of pixels of each color
+		int[] rR = new int[256];
+		int[] rG = new int[256];
+		int[] rB = new int[256];
+		//does the count for each pixel
+		for(int x=minX; x<maxX; x++) {
+			for(int y=minY; y<maxY; y++) {
+				PColor c = img.getCol(x, y);
+				rR[(int)c.getR()]++;
+				rG[(int)c.getG()]++;
+				rB[(int)c.getB()]++;
+			}
+		}
+		//put the results in the output arrays
+		synchronized(R){ for(int i=0;i<256;i++) { R[i]+=rR[i]; } }
+		synchronized(G){ for(int i=0;i<256;i++) { G[i]+=rG[i]; } }
+		synchronized(B){ for(int i=0;i<256;i++) { B[i]+=rB[i]; } }
+	}
+	
+	public static void getColors(final PImage img,final int[] R,final int[] G,final int[] B, int nbThreads) {
+		Thread[] threads = new Thread[nbThreads];
+		final int step = img.width()/nbThreads;
+		for (int i = 0; i < threads.length-1; i++) {
+			final int threadNumber = i;
+			threads[i]= new Thread(){
+				public void run() {
+					getColors(img, R, G, B, threadNumber*step, (threadNumber+1)*step, 0, img.height());
+				}
+			};
+		}
+	}
 }
