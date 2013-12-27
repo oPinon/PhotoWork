@@ -11,20 +11,11 @@ import pImage.PImage;
 import pImage.RGB;
 
 public class AutoBalance {
-	
-	public static void main(String[] args) throws IOException {
-		BufferedImage image_source = ImageIO.read(new File("test.jpg"));
-		PImage image_work = new PImage(image_source);
-		
-		long t0 = System.currentTimeMillis();
-		getMinMax(image_work);
-		System.out.println("MinMax done in "+(System.currentTimeMillis()-t0)+" ms");
-	}
 
-	public static PImage balance(PImage img) {
+	public static PImage balance(PImage img, int nbThreads) {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
-		int[] temp = getMinMax(img);
+		int[] temp = getMinMax(img, 0, nbThreads);
 		int minV = temp[0]; int maxV = temp[1];
 		for(int x=0; x<width; x++) {
 			for(int y=0; y<height; y++) {
@@ -109,17 +100,22 @@ public class AutoBalance {
 		return Math.max(Math.min(pure, 255), 0);
 	}
 	
-	public static int[] getMinMax(PImage img) {
-		int width = img.width(); int height = img.height();
-		PImage toReturn = new PImage(width, height);
+	//threshold is 0 by default, or higher if the image is noisy
+	public static int[] getMinMax(PImage img, int threshold, int nbThreads) {
+		
 		int minV = Integer.MAX_VALUE; int maxV = Integer.MIN_VALUE;
-		for(int x=0; x<width; x++) {
-			for(int y=0; y<height; y++) {
-				PColor c = img.getCol(x, y);
-				int max = Math.max(c.getR(), Math.max(c.getG(),c.getB()));
-				int min = Math.min(c.getR(), Math.min(c.getG(),c.getB()));
-				if(max>maxV) {maxV = max;}
-				if(min<minV) {minV = min;}
+		int[] R = new int[256];
+		int[] G = new int[256];
+		int[] B = new int[256];
+		getColors(img,R,G,B,nbThreads);
+		for(int min=0;min<256;min++){
+			if(Math.max(R[min], Math.max(G[min], B[min]))>=threshold) {
+				minV = min; break;
+			}
+		}
+		for(int max=255;max>=0;max++){
+			if(Math.max(R[max], Math.max(G[max], B[max]))>=threshold) {
+				maxV = max; break;
 			}
 		}
 		System.out.println("min = "+minV+" and max = "+maxV);
@@ -156,6 +152,11 @@ public class AutoBalance {
 					getColors(img, R, G, B, threadNumber*step, (threadNumber+1)*step, 0, img.height());
 				}
 			};
+			threads[i].start();
+		}
+		for (int i = 0; i < threads.length-1; i++) {
+			try { threads[i].join(); }
+			catch (InterruptedException e) { e.printStackTrace(); }
 		}
 	}
 }

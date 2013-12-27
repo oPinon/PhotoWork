@@ -14,7 +14,7 @@ public class Scanner{
 		int outputWidth;
 
 		switch(format){
-		//	case 0: outputHeight= 841 ; outputWidth= 1189 ;break; //désactivé car erreur java outofmemory
+		//	case 0: outputHeight= 841 ; outputWidth= 1189 ;break; //dï¿½sactivï¿½ car erreur java outofmemory
 		case 1: outputHeight= 594 ; outputWidth=  841 ;break;
 		case 2: outputHeight= 420 ; outputWidth=  594 ;break;
 		case 3: outputHeight= 297 ; outputWidth=  420 ;break;
@@ -26,7 +26,7 @@ public class Scanner{
 
 		PImage transformed = Scanner.transform(source,x,y,outputHeight*4,outputWidth*4);
 
-		transformed = AutoBalance.balance(transformed);
+		transformed = AutoBalance.balance(transformed,Runtime.getRuntime().availableProcessors());
 
 		System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
 		return transformed;
