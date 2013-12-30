@@ -125,21 +125,4 @@ public class FormatConversion {
 		}
 		return null;
 	}
-
-	static ImageData createSampleImage(Display display) {
-		Image image = new Image(display, 100, 100);
-		Rectangle bounds = image.getBounds();
-		GC gc = new GC(image);
-		gc.setBackground(display.getSystemColor(SWT.COLOR_BLUE));
-		gc.fillRectangle(bounds);
-		gc.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
-		gc.fillOval(0, 0, bounds.width, bounds.height);
-		gc.setForeground(display.getSystemColor(SWT.COLOR_RED));
-		gc.drawLine(0, 0, bounds.width, bounds.height);
-		gc.drawLine(bounds.width, 0, 0, bounds.height);
-		gc.dispose();
-		ImageData data = image.getImageData();
-		image.dispose();
-		return data;
-	}
 }
