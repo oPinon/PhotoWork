@@ -28,12 +28,12 @@ public class HDREqualizer {
 				for(int i=-size;i<=size;i++){
 					for(int j=-size;j<=size;j++){
 						col = expanded.getCol(x+i, y+j);
-						if(col.getR()<R0) { R++; }
-						if(col.getG()<G0) { G++; }
-						if(col.getB()<B0) { B++; }
+						if(col.getR()<R0) { R+= R0-col.getR(); }
+						if(col.getG()<G0) { G+= G0-col.getG(); }
+						if(col.getB()<B0) { B+= B0-col.getB(); }
 					}
 				}
-				toReturn.setCol(x, y, new RGB((R*255)/n,(G*255)/n,(B*255)/n));
+				toReturn.setCol(x, y, new RGB((R)/n,(G)/n,(B)/n));
 			}
 		}
 		//System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
