@@ -5,6 +5,8 @@ import gAPainter.Painter;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -65,11 +67,11 @@ public class GUI extends Composite {
 	Composite optionsComposite;
 
 	//Zone d'affichage d'image
-	ScrolledComposite scrolledComposite;
+	Composite imageFrame;
 
 	//Zones d'affichage d'informations
 	Label titleLabel;
-	Label infoLabel;
+	Text infoLabel;
 	Label zoomLabel;
 
 	CLabel imageNumber;
@@ -109,9 +111,11 @@ public class GUI extends Composite {
 	PreferencesMenu preferences;
 	boolean workOnAllFiles= true;
 	int nbThreads= PreferencesMenu.AVAILABLE_THREADS;
+	String[] IPList;
 
-	static PoolClient client;
-	static PoolServer server;
+	//Réseau
+	static PoolClient client; //envoie des taches à faire traiter par les PC
+	static PoolServer server; //traite les taches envoyées par les PC
 
 
 	public GUI(Composite parent, int style) {
@@ -126,7 +130,7 @@ public class GUI extends Composite {
 
 
 		titleLabel= new Label(composite_2, SWT.NONE);
-		titleLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1));
+		titleLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		titleLabel.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
 		titleLabel.setText("No image selected");
 
@@ -270,10 +274,10 @@ public class GUI extends Composite {
 				}
 
 				final Shell prefShell= new Shell(shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-				preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, prefShell, SWT.NONE);
+				preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, IPList, prefShell, SWT.NONE);
 				prefShell.setText("Preferences");	
 				prefShell.setLayout(new FillLayout());
-				prefShell.setSize(400,400); 
+				prefShell.setSize(650,400); 
 
 				Rectangle screenSize = display.getPrimaryMonitor().getBounds();
 				prefShell.setLocation((screenSize.width - prefShell.getBounds().width) / 2, (screenSize.height - prefShell.getBounds().height) / 2);
@@ -285,6 +289,7 @@ public class GUI extends Composite {
 						infoLabel.setText("Preferences changes saved");
 						workOnAllFiles= preferences.areAllFilesSelected();
 						nbThreads= preferences.getNbThreads();
+						IPList= preferences.getIPList();
 					}
 				});
 
@@ -312,7 +317,6 @@ public class GUI extends Composite {
 		btnNewButton.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.NORMAL));
 		btnNewButton.setImage(new Image(display,"images/autoBalance.png"));
 		btnNewButton.setText("Auto Balance");
-
 
 		Button btnNewButton_1 = new Button(grpAllImages, SWT.NONE);
 		btnNewButton_1.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.NORMAL));
@@ -390,16 +394,8 @@ public class GUI extends Composite {
 			}
 		});
 
-		scrolledComposite = new ScrolledComposite(this, SWT.BORDER | SWT.DOUBLE_BUFFERED |SWT.NO_REDRAW_RESIZE);
-		scrolledComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
-		scrolledComposite.setExpandHorizontal(true);
-		scrolledComposite.setExpandVertical(true);
-		scrolledComposite.addPaintListener(new PaintListener() { 
-			public void paintControl(PaintEvent e) { 
-				if(savedImages!=null) resizeImage(savedImages[selectedImageNumber]);
-			} 
-		}); 
-		//scrolledComposite.setRedraw(false);
+		imageFrame = new Composite(this, SWT.BORDER | SWT.DOUBLE_BUFFERED |SWT.NO_REDRAW_RESIZE);
+		imageFrame.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
 
 		optionsBar = new Group(this, SWT.NONE);
 		optionsBar.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.BOLD));
@@ -410,11 +406,10 @@ public class GUI extends Composite {
 		optionsComposite = new Composite(optionsBar, SWT.FILL);
 		optionsComposite.setVisible(false);
 
-
-
-		infoLabel= new Label(this, SWT.NONE);
+		infoLabel= new Text(this, SWT.WRAP | SWT.V_SCROLL);
+		infoLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+		infoLabel.setEditable(false);
 		infoLabel.setText("Ready");
-		infoLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 
 		final ProgressBar progressBar = new ProgressBar(this, SWT.SMOOTH);
 		progressBar.setMinimum(0);
@@ -464,12 +459,18 @@ public class GUI extends Composite {
 		//		ProgressBarHandler pbh = new ProgressBarHandler(progressBar);
 		//		pbh.start();
 
+		try {
+			IPList= new String[]{InetAddress.getLocalHost().getHostAddress()};
+		} catch (UnknownHostException e1) {
+			e1.printStackTrace();
+		}
+
 		server= new PoolServer();
+		server.start();
 		try {
 			Thread.sleep(1000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (InterruptedException e2) {
+			e2.printStackTrace();
 		}
 		client= new PoolClient();
 
@@ -490,9 +491,9 @@ public class GUI extends Composite {
 			optionsComposite = new Composite(optionsBar, SWT.FILL);
 			optionsComposite.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 
-			Listener[] listeners = scrolledComposite.getListeners(SWT.MouseDown); 
+			Listener[] listeners = imageFrame.getListeners(SWT.MouseDown); 
 			for(int i = 0 ; i< listeners.length; i++){
-				scrolledComposite.removeListener(SWT.MouseDown, listeners[i]);
+				imageFrame.removeListener(SWT.MouseDown, listeners[i]);
 			}
 		}
 
@@ -642,10 +643,10 @@ public class GUI extends Composite {
 			scanFormat.setSelection(4);
 
 
-			scrolledComposite.addMouseListener(new MouseAdapter() {
+			imageFrame.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDown(MouseEvent arg0) {
-					if(gc==null || gc.isDisposed()) gc= new GC(scrolledComposite);
+					if(gc==null || gc.isDisposed()) gc= new GC(imageFrame);
 					gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
 					gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
 					if(lblNewLabel32.getText().length()==0){		
@@ -703,6 +704,13 @@ public class GUI extends Composite {
 			mb.open();
 			return;
 		}
+		if(IPList.length == 0){ 
+			MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
+			mb.setText("Warning");
+			mb.setMessage("Please connect to at least one PC");
+			mb.open();
+			return;
+		}
 
 		Image[] imagesToModify;
 		int count;	
@@ -716,14 +724,11 @@ public class GUI extends Composite {
 			imagesToModify[0]= savedImages[count];
 		}
 
-		for(Image i: imagesToModify){
-			
-			
-			
-			
+		for(Image i: imagesToModify){		
 			ImageData id= i.getImageData();
 			BufferedImage input= FormatConversion.convertToAWT(id);
 			BufferedImage output;
+			client.newConnection(IPList[count%IPList.length]);
 
 			switch(selectedFunction){
 			case "Auto Balance":
@@ -782,16 +787,15 @@ public class GUI extends Composite {
 				//			});
 				break;	
 			}
-			server.handleTask();
+
 			client.receiveImage();
-			output= new PImage(client.output).getImage();
+			output= new PImage(client.output).getImage(); //nécessaire, sinon convertToSWT ne marche pas
 			int number= client.imageNumber;  
 
-			i= new Image(getDisplay(),
-					FormatConversion.convertToSWT(output));
+			i= new Image(getDisplay(), FormatConversion.convertToSWT(output));
 			savedImages[number]= i;
-			infoLabel.setText(infoLabel.getText()+"Done for image"+count+"\n");
-			System.out.println(number);
+			infoLabel.append("\n"+selectedFunction+" done for image "+(count+1));
+			infoLabel.setTopIndex(infoLabel.getLineCount() - 1);
 			count++;
 
 		}
@@ -802,17 +806,17 @@ public class GUI extends Composite {
 	public void resizeImage(Image img){
 		if(img==null) return;
 
-		double xratio=(double) (scrolledComposite.getClientArea().width)/img.getBounds().width;
-		double yratio=(double) (scrolledComposite.getClientArea().height)/img.getBounds().height;
+		double xratio=(double) (imageFrame.getClientArea().width)/img.getBounds().width;
+		double yratio=(double) (imageFrame.getClientArea().height)/img.getBounds().height;
 
 		zoomRatio=Math.min(xratio, yratio);	
 		zoomLabel.setText(("Zoom: "+(int) (zoomRatio*100)+"%"));	
 
 		image= new Image(display,img.getImageData().scaledTo( (int)(img.getBounds().width*zoomRatio), (int)(img.getBounds().height*zoomRatio)));
 
-		if(gc==null || gc.isDisposed()) gc= new GC(scrolledComposite);
+		if(gc==null || gc.isDisposed()) gc= new GC(imageFrame);
 		gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
-		gc.fillRectangle(scrolledComposite.getClientArea());
+		gc.fillRectangle(imageFrame.getClientArea());
 		gc.drawImage(image, 0, 0);
 		gc.dispose();
 
@@ -831,7 +835,7 @@ public class GUI extends Composite {
 		shell.setText("Photowork");	
 		shell.setLayout(new FillLayout());
 		shell.setSize(1250,700);
-		shell.setMinimumSize(1250,700); 
+		shell.setMinimumSize(1000,560); 
 
 		shell.open();
 		shell.forceActive();
@@ -848,9 +852,8 @@ public class GUI extends Composite {
 			}
 		}
 		// disposes all associated windows and their display
-
+		System.out.println("end");
 		server.terminate();
-		client.terminate();	
 
 		display.dispose();
 		System.exit(0);

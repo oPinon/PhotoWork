@@ -24,7 +24,7 @@ public class Task {
 		DataInputStream fromClient;
 		DataOutputStream toClient;
 		try {
-			System.out.println("prêt à traiter");
+			System.out.println("ServerTask: prêt à traiter");
 
 			fromClient = new DataInputStream(socket.getInputStream());
 			toClient = new DataOutputStream(socket.getOutputStream());
@@ -53,7 +53,6 @@ public class Task {
 
 			case "Blur":
 				int blurSize2= fromClient.readInt();
-				System.out.println(blurSize2);
 
 				output= BlurFilter.blur(input,blurSize2);
 

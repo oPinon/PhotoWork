@@ -24,24 +24,23 @@ public class PoolClient{
 
 	public void sendImage(BufferedImage image, String extension, String function, int[] parameters){
 		try {
-			newConnection();
-			
 			ImageIO.write(image, extension, toServer);
 			toServer.writeUTF(extension);
 			toServer.writeUTF(function);
 			for(int i: parameters){
 				toServer.writeInt(i);
 			}
-			System.out.println("Envoyé");
+			System.out.println("client: image "+(parameters[0]+1)+" envoyée");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	private void newConnection() {
+	public void newConnection(String ip) {
 		try {
-			socket = new Socket(InetAddress.getLocalHost(), 6789);
+			socket = new Socket(ip, 6789);
+			System.out.println("client: L'image sera envoyée à: "+ ip);
 
 			fromServer = new DataInputStream(socket.getInputStream());
 			toServer= new DataOutputStream(socket.getOutputStream());		
@@ -58,19 +57,12 @@ public class PoolClient{
 			fromServer.skip(16); //on saute deux octets qui ne servent à rien
 			imageNumber = fromServer.readInt();
 
-			System.out.println("Reçu: "+imageNumber);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void terminate(){
-		try {
+			System.out.println("client: image "+(imageNumber+1)+" reçue");
 			socket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+
 }

@@ -2,8 +2,9 @@ package network;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
 
-public class PoolServer{
+public class PoolServer extends Thread{
 
 	private static ServerSocket socket;
 	private Pool pool;
@@ -18,16 +19,24 @@ public class PoolServer{
 		}
 	}
 
-	public void handleTask(){
-		try {
-			pool.addTask(new Task(socket.accept()));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public void run(){
+		while(!socket.isClosed()){
+			try {
+				pool.addTask(new Task(socket.accept()));
+			} catch (SocketException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				System.out.println("serveur: fin de connection");
+				return;
+			}
+			catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}
-	
+
 	public void terminate(){
 		try {
 			socket.close();
