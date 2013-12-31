@@ -14,7 +14,7 @@ public class FourierTest {
 	public static void main(String[] args) throws IOException {
 		
 		//loads Image from file
-		BufferedImage originalSource = ImageIO.read(new File("monaLisa.png"));
+		BufferedImage originalSource = ImageIO.read(new File("fouriertest.png"));
 		BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = source.createGraphics();
 		g.drawImage(originalSource, 0, 0, 64, 64, null);

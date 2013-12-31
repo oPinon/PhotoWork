@@ -46,14 +46,14 @@ public class ImageSpectrum {
 						double re = Math.cos(2*Math.PI*(fx*x*1.0/width+fy*y*1.0/height));
 						double im = Math.sin(2*Math.PI*(fx*x*1.0/width+fy*y*1.0/height));
 						Complex c = new Complex(re,im);
-						R.add(RSpectrum.getComplex(fx,fy).multiply(c));
+						R.add(RSpectrum.getComplex(fx, fy).multiply(c));
 						G.add(GSpectrum.getComplex(fx, fy).multiply(c));
 						B.add(BSpectrum.getComplex(fx, fy).multiply(c));
 					}
 				}
-				double r = R.getAbs()*width*height*width*height*255;
-				double g = G.getAbs()*width*height*width*height*255;
-				double b = B.getAbs()*width*height*width*height*255;
+				double r = R.getAbs()/(width*height);
+				double g = G.getAbs()/(width*height);
+				double b = B.getAbs()/(width*height);
 				System.out.println(r);
 				r = Math.max(0, Math.min(255, r));
 				g = Math.max(0, Math.min(255, g));
