@@ -54,7 +54,6 @@ public class ImageSpectrum {
 				double r = R.getAbs()/(width*height);
 				double g = G.getAbs()/(width*height);
 				double b = B.getAbs()/(width*height);
-				System.out.println(r);
 				r = Math.max(0, Math.min(255, r));
 				g = Math.max(0, Math.min(255, g));
 				b = Math.max(0, Math.min(255, b));
@@ -63,5 +62,21 @@ public class ImageSpectrum {
 			}
 		}
 		return img;
+	}
+	
+	public PImage displaySpectrum() {
+		PImage toReturn = new PImage(width,height);
+		for(int fx=0;fx<width;fx++) {
+			for(int fy=0;fy<height;fy++){
+				Complex R = RSpectrum.getComplex(fx,fy);
+				Complex G = GSpectrum.getComplex(fx,fy);
+				Complex B = BSpectrum.getComplex(fx,fy);
+				int r = (int) Math.sqrt(R.getAbs()*R.getAbs());
+				int g = (int) Math.sqrt(G.getAbs()*G.getAbs());
+				int b = (int) Math.sqrt(B.getAbs()*B.getAbs());
+				toReturn.setCol(fx,fy, new RGB(r,g,b));
+			}
+		}
+		return toReturn;
 	}
 }

@@ -14,7 +14,7 @@ public class FourierTest {
 	public static void main(String[] args) throws IOException {
 		
 		//loads Image from file
-		BufferedImage originalSource = ImageIO.read(new File("fouriertest.png"));
+		BufferedImage originalSource = ImageIO.read(new File("monaRaw.png"));
 		BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = source.createGraphics();
 		g.drawImage(originalSource, 0, 0, 64, 64, null);
@@ -27,10 +27,12 @@ public class FourierTest {
 		ImageSpectrum spectrum = new ImageSpectrum(img);
 		System.out.println("spectrum computed");
 		//converts it back to image with reverse Fourier Transform
-		PImage result = spectrum.getImage();
+		PImage result = spectrum.displaySpectrum();
 		System.out.println("reverse transform done");
 		
-		ImageIO.write(result.getImage(), "png", new File("result.png"));
+		new gAPainter.Display(result.getImage());
+		
+		//ImageIO.write(result.getImage(), "png", new File("result.png"));
 	}
 
 }
