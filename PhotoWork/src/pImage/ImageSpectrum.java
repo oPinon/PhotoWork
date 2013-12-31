@@ -57,7 +57,6 @@ public class ImageSpectrum {
 		return img;
 	}
 
-
 	private double getMaximum() {
 		double result= 0;
 		for(int fx=0;fx<width;fx++){
@@ -99,4 +98,8 @@ public class ImageSpectrum {
 		}
 		return img;
 	}
+	
+	public Spectrum getRSpectrum() { return RSpectrum; }
+	public Spectrum getGSpectrum() { return GSpectrum; }
+	public Spectrum getBSpectrum() { return BSpectrum; }
 }

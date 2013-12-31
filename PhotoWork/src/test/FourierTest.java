@@ -14,7 +14,7 @@ public class FourierTest {
 	public static void main(String[] args) throws IOException {
 		
 		//loads Image from file
-		BufferedImage originalSource = ImageIO.read(new File("cln1.gif"));
+		BufferedImage originalSource = ImageIO.read(new File("monaRaw.png"));
 		BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = source.createGraphics();
 		g.drawImage(originalSource, 0, 0, 64, 64, null);
@@ -27,12 +27,32 @@ public class FourierTest {
 		ImageSpectrum spectrum = new ImageSpectrum(img);
 		System.out.println("spectrum computed");
 		//converts it back to image with reverse Fourier Transform
-
-		PImage result = spectrum.getTransform();
+		
+		int f = 8; // the width of the part we remove in the spectrum
+		for(int x = -f; x <= f; x++){
+			for(int y = -f; y <= f; y++){
+				int x1 = source.getWidth()/2+x;
+				int y1 = source.getHeight()/2+y;
+				
+				if(x!=0&&y!=0){ // musn't remove the constant part of the spectrum
+				spectrum.getRSpectrum().setComplex(x1, y1, new Complex(0,0));
+				spectrum.getGSpectrum().setComplex(x1, y1, new Complex(0,0));
+				spectrum.getBSpectrum().setComplex(x1, y1, new Complex(0,0));
+				}
+			}
+		}
+		
+		PImage result = spectrum.getReverseTransform();
+		result = filter.AutoBalance.balanceColors(result);
 
 		System.out.println("reverse transform done");
 		
-		new gAPainter.Display(result.getImage());
+		BufferedImage toReturn = new BufferedImage(originalSource.getWidth(), originalSource.getHeight(), BufferedImage.TYPE_INT_RGB);
+		g = toReturn.createGraphics();
+		g.drawImage(result.getImage(), 0, 0, originalSource.getWidth(), originalSource.getHeight(), null);
+		g.dispose();
+		
+		new gAPainter.Display(toReturn);
 		
 		//ImageIO.write(result.getImage(), "png", new File("result.png"));
 	}
