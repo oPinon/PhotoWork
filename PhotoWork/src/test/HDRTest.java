@@ -12,11 +12,11 @@ public class HDRTest {
 
 	public static void main(String[] args) throws IOException {
 		
-		BufferedImage originalSource = ImageIO.read(new File("monaRaw.png"));
+		BufferedImage originalSource = ImageIO.read(new File("depth.png"));
 
 		PImage source = new PImage(originalSource);
 		
-		PImage toReturn = filter.HDREqualizer.filter(source, 50);
+		PImage toReturn = filter.HDREqualizer.filter2(source, 50);
 		
 		toReturn = filter.AutoBalance.balanceColors(toReturn);
 		
