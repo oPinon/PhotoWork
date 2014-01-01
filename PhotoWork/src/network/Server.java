@@ -4,15 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
 
-public class PoolServer extends Thread{
+public class Server extends Thread{
 
 	private static ServerSocket socket;
-	private Pool pool;
 
-	public PoolServer() {
+	public Server() {
 		try {
 			socket = new ServerSocket(6789);
-			pool = new Pool(5, 5);
+			System.out.println("serveur: création sur cet ordinateur");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -22,7 +21,7 @@ public class PoolServer extends Thread{
 	public void run(){
 		while(!socket.isClosed()){
 			try {
-				pool.addTask(new Task(socket.accept()));
+				new ComputationThread(socket.accept()).start();
 			} catch (SocketException e) {
 				// TODO Auto-generated catch block
 				//e.printStackTrace();
