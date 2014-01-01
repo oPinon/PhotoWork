@@ -7,13 +7,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
 
-import network.PoolClient;
-import network.PoolServer;
+import network.Buffer;
+import network.Client;
+import network.Result;
+import network.Server;
+import network.Task;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -55,7 +59,7 @@ import pImage.Scanner;
 
 import org.eclipse.swt.custom.CLabel;
 
-public class GUI extends Composite {
+public class GUI extends Composite  {
 
 	//moniteur d'affichage
 	private static Display display;
@@ -86,7 +90,8 @@ public class GUI extends Composite {
 	//Dessins sur l'affichage d'image
 	GC gc;
 
-
+	private ProgressBar progressBar;
+	
 	//PARAMETRES
 	//Nom des fichiers chargés
 	String[] fileNames;
@@ -102,7 +107,6 @@ public class GUI extends Composite {
 	//Scan
 	int[] scanPointsX= new int[4];
 	int[] scanPointsY= new int[4];
-	List scanFormat;
 
 	//GA Painter
 	Button btnStop;
@@ -112,10 +116,9 @@ public class GUI extends Composite {
 	boolean workOnAllFiles= true;
 	int nbThreads= PreferencesMenu.AVAILABLE_THREADS;
 	String[] IPList;
-
+	
 	//Réseau
-	static PoolClient client; //envoie des taches à faire traiter par les PC
-	static PoolServer server; //traite les taches envoyées par les PC
+	static Server server; //traite les taches envoyées par les PC
 
 
 	public GUI(Composite parent, int style) {
@@ -303,6 +306,7 @@ public class GUI extends Composite {
 		});
 
 		Group composite = new Group(this, SWT.NONE);
+		composite.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
 		composite.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.BOLD));
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		composite.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
@@ -310,6 +314,7 @@ public class GUI extends Composite {
 		composite.setText("Menu");
 
 		Group grpAllImages = new Group(composite, SWT.NONE);
+		grpAllImages.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
 		grpAllImages.setText("All images");
 		grpAllImages.setLayout(new FillLayout(SWT.VERTICAL));
 
@@ -352,6 +357,7 @@ public class GUI extends Composite {
 		});
 
 		Group grpCurrentImageOnly = new Group(composite, SWT.NONE);
+		grpCurrentImageOnly.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
 		grpCurrentImageOnly.setText("Current image only");
 		grpCurrentImageOnly.setLayout(new FillLayout(SWT.VERTICAL));
 
@@ -398,6 +404,7 @@ public class GUI extends Composite {
 		imageFrame.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 1));
 
 		optionsBar = new Group(this, SWT.NONE);
+		optionsBar.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
 		optionsBar.setFont(SWTResourceManager.getFont("Segoe UI", 16, SWT.BOLD));
 		optionsBar.setLayout(new FillLayout(SWT.HORIZONTAL));
 		optionsBar.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -411,7 +418,7 @@ public class GUI extends Composite {
 		infoLabel.setEditable(false);
 		infoLabel.setText("Ready");
 
-		final ProgressBar progressBar = new ProgressBar(this, SWT.SMOOTH);
+		progressBar = new ProgressBar(this, SWT.SMOOTH);
 		progressBar.setMinimum(0);
 		progressBar.setMaximum(100);	
 		GridData gd_progressBar = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
@@ -456,25 +463,14 @@ public class GUI extends Composite {
 			}
 		});
 
-		//		ProgressBarHandler pbh = new ProgressBarHandler(progressBar);
-		//		pbh.start();
-
 		try {
 			IPList= new String[]{InetAddress.getLocalHost().getHostAddress()};
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 		}
 
-		server= new PoolServer();
+		server= new Server();
 		server.start();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e2) {
-			e2.printStackTrace();
-		}
-		client= new PoolClient();
-
-
 	}
 
 	private void updateImageNumber() {
@@ -524,7 +520,7 @@ public class GUI extends Composite {
 				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					if(btnNewButton_11.getSelection()){
-						autoBalanceType=1;
+						autoBalanceType= 1;
 						blurCheckButton.setEnabled(true);
 						blurCheckButton.setSelection(false);
 					}
@@ -537,10 +533,9 @@ public class GUI extends Composite {
 			blurCheckButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent arg0) {
-					if(!blurCheckButton.getSelection()){
-						blurSize.setEnabled(false);
-					}
-					else blurSize.setEnabled(true);
+					blurSize.setEnabled(blurCheckButton.getSelection());
+					if(blurCheckButton.getSelection()) autoBalanceType= 2;
+					else autoBalanceType= 1;
 				}
 			});
 
@@ -637,7 +632,7 @@ public class GUI extends Composite {
 			});
 			btnNewButton1.setText("Clear");
 
-			scanFormat = new List(optionsComposite, SWT.V_SCROLL);
+			List scanFormat = new List(optionsComposite, SWT.V_SCROLL);
 			scanFormat.setItems(new String[] {"A0 (841*1189)", "A1 (594*841)", "A2 (420*594)", "A3 (297*420)",
 					"A4 (210*297)", "A5 (148*210)", "A6 (105*148)"});
 			scanFormat.setSelection(4);
@@ -712,6 +707,9 @@ public class GUI extends Composite {
 			return;
 		}
 
+		long t1= System.currentTimeMillis();
+		progressBar.setSelection(0);
+		
 		Image[] imagesToModify;
 		int count;	
 		if((selectedFunction=="Auto Balance" || selectedFunction=="Blur") && workOnAllFiles){
@@ -724,20 +722,30 @@ public class GUI extends Composite {
 			imagesToModify[0]= savedImages[count];
 		}
 
+		int tasksLeft= imagesToModify.length;
+		Buffer<Task> tasksToDo= new Buffer<Task>();
+		Buffer<Result> tasksDone= new Buffer<Result>();
+
+		java.util.List<Client> clients= new ArrayList<Client>();
+		for(String s: IPList){
+			Client c= new Client(s, tasksToDo, tasksDone);
+			clients.add(c);
+			c.start();
+		}
+
 		for(Image i: imagesToModify){		
 			ImageData id= i.getImageData();
 			BufferedImage input= FormatConversion.convertToAWT(id);
-			BufferedImage output;
-			client.newConnection(IPList[count%IPList.length]);
+
+			Task task = null;
 
 			switch(selectedFunction){
 			case "Auto Balance":
-				if(autoBalanceType==1 && blurSize.isEnabled()) autoBalanceType= 2;
-				client.sendImage(input,fileNames[count].substring(fileNames[count].lastIndexOf(".")+1),"Auto Balance",new int[]{count,nbThreads,autoBalanceType,blurSize.getSelection()});
+				task= new Task(input, fileNames[count].substring(fileNames[count].lastIndexOf(".")+1), "Auto Balance", count, new int[]{nbThreads,autoBalanceType,blurSize.getSelection()});
 				break;
 
 			case "Blur":
-				client.sendImage(input,fileNames[count].substring(fileNames[count].lastIndexOf(".")+1),"Blur",new int[]{count,nbThreads,blurSize.getSelection()});
+				task= new Task(input, fileNames[count].substring(fileNames[count].lastIndexOf(".")+1), "Blur", count, new int[]{nbThreads,blurSize.getSelection()});
 				break;
 
 			case "Scan":
@@ -788,19 +796,41 @@ public class GUI extends Composite {
 				break;	
 			}
 
-			client.receiveImage();
-			output= new PImage(client.output).getImage(); //nécessaire, sinon convertToSWT ne marche pas
-			int number= client.imageNumber;  
-
-			i= new Image(getDisplay(), FormatConversion.convertToSWT(output));
-			savedImages[number]= i;
-			infoLabel.append("\n"+selectedFunction+" done for image "+(count+1));
-			infoLabel.setTopIndex(infoLabel.getLineCount() - 1);
+			try {
+				tasksToDo.put(task);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				return;
+			}
 			count++;
+		}
 
+		while(tasksLeft>0){
+			Result r;
+			try {
+				r = tasksDone.take();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				return;
+			}
+			BufferedImage output= new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
+			int number= r.getImageNumber();
+
+			Image i= new Image(getDisplay(), FormatConversion.convertToSWT(output));
+			savedImages[number]= i;	
+
+			infoLabel.append("\n"+selectedFunction+" done for image "+(number+1));
+			infoLabel.setTopIndex(infoLabel.getLineCount() - 1);
+			
+			tasksLeft--;
+			progressBar.setSelection(100-(tasksLeft*100/imagesToModify.length));
 		}
 		resizeImage(savedImages[selectedImageNumber]);
-
+		
+		for(Client c: clients) c.interrupt();
+		
+		long t2= System.currentTimeMillis();
+		infoLabel.append("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)");
 	}
 
 	public void resizeImage(Image img){
@@ -852,7 +882,7 @@ public class GUI extends Composite {
 			}
 		}
 		// disposes all associated windows and their display
-		System.out.println("end");
+		System.out.println("Photowork closing");
 		server.terminate();
 
 		display.dispose();
