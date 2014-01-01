@@ -24,18 +24,19 @@ public class Client extends Thread{
 	public Client(String ip, Buffer<Task> tasksToDo, Buffer<Result> tasksDone) {
 		this.tasksToDo= tasksToDo;
 		this.tasksDone= tasksDone;	
-		this.ip= ip;
-		System.out.println("client "+ip+": client créé");
+		this.ip= ip;	
+
+		System.out.println("client "+ip+": client créé");	
 	}
 
 	private void newConnection() {
 		try {
-			socket = new Socket(ip, 6789);
+			socket= new Socket(ip, 6789);
 			fromServer = new DataInputStream(socket.getInputStream());
-			toServer= new DataOutputStream(socket.getOutputStream());	
+			toServer= new DataOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
 			System.err.println("client "+ip+": erreur lors de la création");
-			e.printStackTrace();
+			interrupt();
 		}
 	}
 
@@ -54,7 +55,7 @@ public class Client extends Thread{
 
 	private void sendImage() throws IOException, InterruptedException{
 		Task toSend= tasksToDo.take();
-		newConnection();
+		newConnection();	
 		toSend.sendToStream(toServer);
 
 		System.out.println("client "+ip+": image "+(toSend.imageNumber+1)+" envoyée");
@@ -68,13 +69,14 @@ public class Client extends Thread{
 
 		tasksDone.put(new Result(output,imageNumber));
 		System.out.println("client "+ip+": image "+(imageNumber+1)+" reçue");
+
+
 	}
 
 	public void terminate(){
 		try {
 			socket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

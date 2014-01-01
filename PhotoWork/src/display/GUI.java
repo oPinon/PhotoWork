@@ -280,7 +280,7 @@ public class GUI extends Composite  {
 				preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, IPList, prefShell, SWT.NONE);
 				prefShell.setText("Preferences");	
 				prefShell.setLayout(new FillLayout());
-				prefShell.setSize(650,400); 
+				prefShell.setSize(700,400); 
 
 				Rectangle screenSize = display.getPrimaryMonitor().getBounds();
 				prefShell.setLocation((screenSize.width - prefShell.getBounds().width) / 2, (screenSize.height - prefShell.getBounds().height) / 2);
@@ -300,8 +300,6 @@ public class GUI extends Composite  {
 					if (!display.readAndDispatch())	display.sleep();
 				}
 
-				// disposes all associated windows and their display
-				//	prefShell.dispose();
 			}
 		});
 
@@ -886,6 +884,6 @@ public class GUI extends Composite  {
 		server.terminate();
 
 		display.dispose();
-		System.exit(0);
+	//	System.exit(0);
 	}
 }

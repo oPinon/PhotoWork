@@ -3,7 +3,6 @@ package network;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -31,7 +30,12 @@ public class ComputationThread extends Thread {
 			fromClient = new DataInputStream(socket.getInputStream());
 			toClient = new DataOutputStream(socket.getOutputStream());
 			
-			PImage input= new PImage(ImageIO.read(fromClient));
+			BufferedImage b= ImageIO.read(fromClient);
+			if(b==null) {													//pour les tests de connection
+				System.out.println("computationThread: test connection OK");
+				return; 
+			}
+			PImage input= new PImage(b);
 			
 			PImage output= new PImage(0,0);	
 			fromClient.skip(16); //on saute deux octets qui ne servent à rien

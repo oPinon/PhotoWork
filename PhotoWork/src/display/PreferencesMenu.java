@@ -1,6 +1,9 @@
 package display;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 
 import org.eclipse.swt.SWT;
@@ -48,12 +51,14 @@ public class PreferencesMenu extends Composite {
 		setLayout(new GridLayout(2, false));
 
 		Group grpNetwork = new Group(this, SWT.NONE);
-		grpNetwork.setLayout(new GridLayout(2, false));
+		grpNetwork.setLayout(new GridLayout(1, false));
 		grpNetwork.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 2));
 		grpNetwork.setText("Network");
 
+
+
 		serverList = new List(grpNetwork, SWT.BORDER | SWT.V_SCROLL);
-		GridData gd_serverList = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+		GridData gd_serverList = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
 		gd_serverList.widthHint = 170;
 		serverList.setLayoutData(gd_serverList);
 		serverList.addSelectionListener(new SelectionListener() {
@@ -61,7 +66,7 @@ public class PreferencesMenu extends Composite {
 				btnRemoveServer.setEnabled(serverList.getSelectionCount()!=0);
 			}
 			public void widgetDefaultSelected(SelectionEvent arg0) {}
-		});
+		});	
 		
 		IPs= IPList;
 		for(String s: IPs){
@@ -70,7 +75,7 @@ public class PreferencesMenu extends Composite {
 
 		Composite composite_1 = new Composite(grpNetwork, SWT.NONE);
 		composite_1.setLayout(new FillLayout(SWT.HORIZONTAL));
-		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
 
 		text = new Text(composite_1, SWT.BORDER);
 
@@ -78,18 +83,22 @@ public class PreferencesMenu extends Composite {
 		btnAddServer.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				if(text.getText().length()!=0){
+				String ip= text.getText();			
+				if(ip.length()!=0){
 					try {
-						InetAddress.getByName(text.getText());
+						InetAddress.getByName(ip);	
+						Socket socket= new Socket();	
+						socket.connect(new InetSocketAddress(ip, 6789), 1000);
+						socket.close();
+
 						serverList.add(text.getText());
 						btnRemoveServer.setEnabled(true);
-					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
+					} catch (IOException e) {
 						MessageBox mb= new MessageBox(getShell(), SWT.ICON_WARNING | SWT.ABORT);
 						mb.setText("Warning");
 						mb.setMessage("Can't reach entered IP address");
 						mb.open();
-					}
+					} 
 					finally{
 						text.setText("");	
 					}													
