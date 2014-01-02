@@ -9,8 +9,11 @@ import java.net.Socket;
 import javax.imageio.ImageIO;
 
 import pImage.PImage;
+import pImage.Scanner;
 import filter.AutoBalance;
 import filter.BlurFilter;
+import filter.HDREqualizer;
+import filter.ImageFunction;
 
 public class ComputationThread extends Thread {
 
@@ -29,25 +32,24 @@ public class ComputationThread extends Thread {
 
 			fromClient = new DataInputStream(socket.getInputStream());
 			toClient = new DataOutputStream(socket.getOutputStream());
-			
+
 			BufferedImage b= ImageIO.read(fromClient);
 			if(b==null) {													//pour les tests de connection
 				System.out.println("computationThread: test connection OK");
 				return; 
 			}
 			PImage input= new PImage(b);
-			
+
 			PImage output= new PImage(0,0);	
 			fromClient.skip(16); //on saute deux octets qui ne servent à rien
 
 			String extension= fromClient.readUTF();
-			String function= fromClient.readUTF();
+			ImageFunction function= ImageFunction.fromName(fromClient.readUTF());
 			int imageNumber= fromClient.readInt();	
-			
-			int nbThreads= fromClient.readInt();
 
 			switch(function){
-			case "Auto Balance":
+			case AUTO_BALANCE:
+				int nbThreads= fromClient.readInt();
 				int type= fromClient.readInt();
 				int blurSize= fromClient.readInt();
 
@@ -56,35 +58,36 @@ public class ComputationThread extends Thread {
 				case 1: output= AutoBalance.balanceColors(input);		   break;	
 				case 2: output= AutoBalance.balanceColors(input,blurSize); break;
 				}
-
 				break;
 
-			case "Blur":
+			case BLUR:
 				int blurSize2= fromClient.readInt();
 
 				output= BlurFilter.blur(input,blurSize2);
+				break;
+				
+			case HDR_EQUALIZER:
+				int algorithm= fromClient.readInt();
+				int blurSize3= fromClient.readInt();
+
+				if(algorithm==0) output= HDREqualizer.filter(input,blurSize3);
+				else output= HDREqualizer.filter2(input,blurSize3);
+				
+				output= AutoBalance.balanceColors(output);
+				
+				break;
+
+			case SCAN:
+				int nbThreads2= fromClient.readInt();
+				int[] scanPointsX= {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
+				int[] scanPointsY= {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
+				int formatIndex= fromClient.readInt();
+
+				output= Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2);
 
 				break;
 
-			case "Scan":
-				//			if(scanPointsX[0] == 0 || scanPointsY[0] == 0){
-				//				MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
-				//				mb.setText("Warning");
-				//				mb.setMessage("Please select 4 scan points\nand hit save button");
-				//				mb.open();
-				//				return;
-				//			}
-				//
-				//			ImageData id2= savedImages[selectedImageNumber].getImageData();
-				//			PImage output;
-				//			output= Scanner.scan(FormatConversion.convertToAWT(id2), scanPointsX,scanPointsY,scanFormat.getSelectionIndex());
-				//
-				//			savedImages[selectedImageNumber]= new Image(getDisplay(),FormatConversion.convertToSWT(output.getImage()));
-				//			resizeImage(savedImages[selectedImageNumber]);
-				//			infoLabel.setText(infoLabel.getText()+"Scanning done"+"\n");
-				break;
-
-			case "GA Painter":	
+			case GA_PAINTER:	
 				//			ImageData id= savedImages[selectedImageNumber].getImageData();
 				//			final Painter p= new Painter(FormatConversion.convertToAWT(id));		
 				//			p.start();
@@ -119,6 +122,9 @@ public class ComputationThread extends Thread {
 				//				}
 				//			});
 				break;
+				
+				default: 
+					break;
 			}
 
 			ImageIO.write(output.getImage(), extension, toClient);

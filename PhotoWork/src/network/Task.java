@@ -2,27 +2,31 @@ package network;
 
 import java.awt.image.BufferedImage;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
 
-import pImage.PImage;
+import filter.ImageFunction;
 
+/**
+ * Représente une image à traiter, avec les paramètres du traitement
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class Task {
 	BufferedImage image;
 	String extension;
-	String function;
+	ImageFunction function;
 	int imageNumber;
 	int[] parameters;
 
-	public Task(BufferedImage image, String extension, String function,
+	public Task(BufferedImage image, String extension, ImageFunction functionID,
 			int imageNumber, int[] parameters) {
 		super();
 		this.image = image;
 		this.extension = extension;
-		this.function = function;
+		this.function = functionID;
 		this.imageNumber = imageNumber;
 		this.parameters = parameters;
 	}
@@ -30,7 +34,7 @@ public class Task {
 	public void sendToStream(DataOutputStream toServer) throws IOException{
 		ImageIO.write(image, extension, toServer);
 		toServer.writeUTF(extension);
-		toServer.writeUTF(function);
+		toServer.writeUTF(function.name());
 		toServer.writeInt(imageNumber);
 		for(int i: parameters){
 			toServer.writeInt(i);

@@ -29,23 +29,24 @@ public class PreferencesMenu extends Composite {
 
 	Composite parent;
 
-	List fileList;
-	Spinner threadsSpinner;
-	List serverList;
+	List fileList, serverList;
+	Spinner threadsSpinner;	
+	
+	Button btnRemoveServer;
 
 	boolean workOnAllFiles;
 	int threads;
 	String[] IPs;
-	private Text text;
+	Text text;
 
-	private Button btnRemoveServer;
+
 
 	/**
 	 * Create the composite.
 	 * @param parent
 	 * @param style
 	 */
-	public PreferencesMenu(String[] fileNames, Image[] savedImages, boolean workOnEveryFiles, int nbThreads, String[] IPList, final Composite parent, int style) {
+	PreferencesMenu(String[] fileNames, Image[] savedImages, boolean workOnEveryFiles, int nbThreads, String[] IPList, final Composite parent, int style) {
 		super(parent, style);
 		this.parent= parent;
 		setLayout(new GridLayout(2, false));
@@ -54,8 +55,6 @@ public class PreferencesMenu extends Composite {
 		grpNetwork.setLayout(new GridLayout(1, false));
 		grpNetwork.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 2));
 		grpNetwork.setText("Network");
-
-
 
 		serverList = new List(grpNetwork, SWT.BORDER | SWT.V_SCROLL);
 		GridData gd_serverList = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
@@ -66,8 +65,7 @@ public class PreferencesMenu extends Composite {
 				btnRemoveServer.setEnabled(serverList.getSelectionCount()!=0);
 			}
 			public void widgetDefaultSelected(SelectionEvent arg0) {}
-		});	
-		
+		});		
 		IPs= IPList;
 		for(String s: IPs){
 			serverList.add(s);
@@ -186,7 +184,6 @@ public class PreferencesMenu extends Composite {
 				try {
 					serverList.add(InetAddress.getLocalHost().getHostAddress());
 				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -208,15 +205,15 @@ public class PreferencesMenu extends Composite {
 
 	}
 
-	public boolean areAllFilesSelected(){
+	boolean areAllFilesSelected(){
 		return workOnAllFiles;
 	}
 
-	public int getNbThreads(){
+	int getNbThreads(){
 		return threads;
 	}
 
-	public String[] getIPList() {
+	String[] getIPList() {
 		return IPs;
 	}
 

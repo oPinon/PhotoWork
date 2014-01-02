@@ -75,7 +75,7 @@ public class Client extends Thread{
 
 	public void terminate(){
 		try {
-			socket.close();
+			if(socket!=null) socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

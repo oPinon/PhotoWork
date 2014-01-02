@@ -12,7 +12,7 @@ public class HDRTest {
 
 	public static void main(String[] args) throws IOException {
 		
-		BufferedImage originalSource = ImageIO.read(new File("depth.png"));
+		BufferedImage originalSource = ImageIO.read(new File("hdr.png"));
 
 		PImage source = new PImage(originalSource);
 		

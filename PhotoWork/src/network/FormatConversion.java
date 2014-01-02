@@ -1,4 +1,4 @@
-package display;
+package network;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Display;
 
 public class FormatConversion {
 
-	static BufferedImage convertToAWT(ImageData data) {
+	public static BufferedImage convertToAWT(ImageData data) {
 		ColorModel colorModel = null;
 		PaletteData palette = data.palette;
 		if (palette.isDirect) {
@@ -73,7 +73,7 @@ public class FormatConversion {
 		}
 	}
 
-	static ImageData convertToSWT(BufferedImage bufferedImage) {
+	public static ImageData convertToSWT(BufferedImage bufferedImage) {
 		if (bufferedImage.getColorModel() instanceof DirectColorModel) {
 			DirectColorModel colorModel = (DirectColorModel) bufferedImage
 					.getColorModel();

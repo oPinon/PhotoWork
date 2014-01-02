@@ -1,20 +1,17 @@
 package pImage;
 
-import java.awt.image.BufferedImage;
-
 import filter.AutoBalance;
 
 public class Scanner{
 
-	public static PImage scan(BufferedImage input, int[] x, int[] y, int format) {
+	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads) {
 		long t0 = System.currentTimeMillis();
-		PImage source = new PImage(input);
 
 		int outputHeight;
 		int outputWidth;
 
 		switch(format){
-		//	case 0: outputHeight= 841 ; outputWidth= 1189 ;break; //d�sactiv� car erreur java outofmemory
+		case 0: outputHeight= 841 ; outputWidth= 1189 ;break; //d�sactiv� car erreur java outofmemory
 		case 1: outputHeight= 594 ; outputWidth=  841 ;break;
 		case 2: outputHeight= 420 ; outputWidth=  594 ;break;
 		case 3: outputHeight= 297 ; outputWidth=  420 ;break;
@@ -24,9 +21,9 @@ public class Scanner{
 		default: outputHeight= 210 ; outputWidth= 297 ;
 		}
 
-		PImage transformed = Scanner.transform(source,x,y,outputHeight*4,outputWidth*4);
+		PImage transformed = Scanner.transform(input,x,y,outputHeight*4,outputWidth*4);
 
-		transformed = AutoBalance.balance(transformed,Runtime.getRuntime().availableProcessors());
+		transformed = AutoBalance.balance(transformed,nbThreads);
 
 		System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
 		return transformed;
