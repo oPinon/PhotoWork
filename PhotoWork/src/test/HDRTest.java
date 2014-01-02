@@ -16,7 +16,7 @@ public class HDRTest {
 
 		PImage source = new PImage(originalSource);
 		
-		PImage toReturn = filter.HDREqualizer.filter2(source, 50);
+		PImage toReturn = filter.HDREqualizer.filter2(source, 50, new display.ProgressBar());
 		
 		toReturn = filter.AutoBalance.balanceColors(toReturn);
 		
