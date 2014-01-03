@@ -1,4 +1,4 @@
-package network;
+package display;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -15,6 +15,12 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+/**
+ * Convertit les Images SWT utilisées par le GUI en BufferedImages utilisées lors du traitement, et vice et versa.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class FormatConversion {
 
 	public static BufferedImage convertToAWT(ImageData data) {

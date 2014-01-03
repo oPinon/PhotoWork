@@ -42,6 +42,13 @@ import org.eclipse.swt.custom.CLabel;
 
 import filter.ImageFunction;
 
+/**
+ * La classe principale. Base de l'IHM. En tant que classe centrale de l'affichage utilisant SWT,
+ * elle contient aussi la méthode main().
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class GUI extends Composite  {
 
 	//BASE DE LA FENETRE SWT
@@ -524,6 +531,9 @@ public class GUI extends Composite  {
 		server.start();
 	}
 
+	/**
+	 *  Crée un menu d'options dépendant de la fonction choisie.
+	 */
 	void createOptionsMenu(){
 		if(image == null){ 
 			showWarningMessage("Please select a file to work on");
@@ -827,6 +837,10 @@ public class GUI extends Composite  {
 		optionsBar.layout();
 	}
 
+	/**
+	 * Lance un traitement pour la fonction sélectionnée. Un seul traitement peut avoir lieu simultanément sur un même
+	 * ordinateur.
+	 */
 	private void apply(){
 		if(updater!=null && updater.isAlive()){ 
 			showWarningMessage("Please wait for the current treatment to end");
@@ -851,6 +865,9 @@ public class GUI extends Composite  {
 		updater.start();
 	}
 
+	/**
+	 * Rafraîchit l'image en train d'être visionnée.
+	 */
 	void refreshDisplay(){
 		imageNumber.setText((selectedImageNumber+1)+"/"+savedImages.length);
 		titleLabel.setText(fileNames[selectedImageNumber].substring(fileNames[selectedImageNumber].lastIndexOf('/') + 1));
@@ -875,6 +892,12 @@ public class GUI extends Composite  {
 		gc.dispose();
 	}
 
+	/**
+	 * Enregistre une image traitée dans le tableau d'images.
+	 * @param img l'image traitée
+	 * @param number le numéro de l'image
+	 * @param appliedFunction la fonction qui lui a été appliquée
+	 */
 	void updateImage(Image img, int number, ImageFunction appliedFunction){
 		if(savedImages!=null){
 			savedImages[number]= img;
@@ -923,7 +946,6 @@ public class GUI extends Composite  {
 
 		shell.open();
 		shell.forceActive();
-
 
 		// run the event loop as long as the window is open
 		while (!g.isDisposed()) {

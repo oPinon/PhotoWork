@@ -1,5 +1,12 @@
 package filter;
 
+/**
+ * Enumération des différentes fonctions de l'application. Indique aussi si elles peuvent s'appliquer à plusieurs images
+ * en même temps.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public enum ImageFunction {
 	AUTO_BALANCE("Auto Balance",true),
 	BLUR("Blur",true),

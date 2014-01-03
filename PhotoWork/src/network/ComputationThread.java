@@ -18,6 +18,12 @@ import filter.BlurFilter;
 import filter.HDREqualizer;
 import filter.ImageFunction;
 
+/**
+ * Réalise le traitement d'une image.
+ * 
+ * @author Pierre-Alexandre
+ *
+ */
 public class ComputationThread extends Thread {
 
 	Socket socket;

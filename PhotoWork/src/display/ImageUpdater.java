@@ -6,7 +6,6 @@ import java.util.List;
 
 import network.Buffer;
 import network.Client;
-import network.FormatConversion;
 import network.Result;
 import network.Task;
 
@@ -17,6 +16,13 @@ import org.eclipse.swt.widgets.Display;
 import pImage.PImage;
 import filter.ImageFunction;
 
+/**
+ * Cette classe sert d'interface entre le GUI et les clients, en transmettant les données à traiter aux clients et 
+ * en mettant à jour le GUI à partir des données reçues.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class ImageUpdater extends Thread {
 	private GUI g;
 

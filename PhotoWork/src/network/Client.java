@@ -8,6 +8,12 @@ import java.net.Socket;
 
 import javax.imageio.ImageIO;
 
+/**
+ * Le client envoie des Task au serveur, et convertit ce qu'il reçoit en Result.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class Client extends Thread{
 
 	private String ip;
@@ -27,17 +33,6 @@ public class Client extends Thread{
 		this.ip= ip;	
 
 		System.out.println("client "+ip+": client créé");	
-	}
-
-	private void newConnection() {
-		try {
-			socket= new Socket(ip, 6789);
-			fromServer = new DataInputStream(socket.getInputStream());
-			toServer= new DataOutputStream(socket.getOutputStream());
-		} catch (IOException e) {
-			System.err.println("client "+ip+": erreur lors de la création");
-			interrupt();
-		}
 	}
 
 	public void run(){
@@ -67,9 +62,19 @@ public class Client extends Thread{
 		int imageNumber = fromServer.readInt();
 
 		tasksDone.put(new Result(output,imageNumber));
+		
 		System.out.println("client "+ip+": image "+(imageNumber+1)+" reçue");
+	}
 
-
+	private void newConnection() {
+		try {
+			socket= new Socket(ip, 6789);
+			fromServer = new DataInputStream(socket.getInputStream());
+			toServer= new DataOutputStream(socket.getOutputStream());
+		} catch (IOException e) {
+			System.err.println("client "+ip+": erreur lors de la création");
+			interrupt();
+		}
 	}
 
 	public void terminate(){

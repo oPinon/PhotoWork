@@ -24,6 +24,12 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Text;
 
+/**
+ * Cette classe représente le menu des préférences, où l'utilisateur définit les principaux paramètres de l'application.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class PreferencesMenu extends Composite {
 	public static final int AVAILABLE_THREADS= Runtime.getRuntime().availableProcessors();
 

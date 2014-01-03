@@ -7,6 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Représente un tampon de tâches entre ImageUpdater et les clients, en suivant un modèle producteur/consommateur.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ * @param <T> soit une tâche à accomplir (Task), soit une tâche accomplie (Result)
+ */
 public class Buffer<T> {
 
 	private List<T> tampon;

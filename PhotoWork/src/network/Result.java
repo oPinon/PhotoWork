@@ -3,7 +3,7 @@ package network;
 import java.awt.image.BufferedImage;
 
 /**
- * Représente le résultat d'un traitement: image traitée et son numéro
+ * Représente le résultat d'un traitement: image traitée et son numéro.
  * 
  * @author Pierre-Alexandre Durand
  *   

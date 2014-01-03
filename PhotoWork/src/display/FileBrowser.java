@@ -3,6 +3,12 @@ package display;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 
+/**
+ * Explorateur de fichier, permettant d'en charger et d'en sauvegarder plusieurs à la fois.
+ * 
+ * @author Pierre-Alexandre Durand
+ *
+ */
 public class FileBrowser {
 	Shell shell;
 	String[] chosenFiles;
@@ -71,9 +77,5 @@ public class FileBrowser {
 		}
 
 		shell.dispose();
-	}
-
-	public static void main(String[] args) {
-		new FileBrowser(new Display(), SWT.SAVE);
 	}
 } 
