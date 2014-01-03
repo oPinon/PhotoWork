@@ -1,5 +1,6 @@
 package network;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,6 +9,8 @@ import java.net.Socket;
 
 import javax.imageio.ImageIO;
 
+import display.ProgressBarHandler;
+import pImage.ImageSpectrum;
 import pImage.PImage;
 import pImage.Scanner;
 import filter.AutoBalance;
@@ -43,7 +46,6 @@ public class ComputationThread extends Thread {
 			PImage output= new PImage(0,0);	
 			fromClient.skip(16); //on saute deux octets qui ne servent à rien
 
-			String extension= fromClient.readUTF();
 			ImageFunction function= ImageFunction.fromName(fromClient.readUTF());
 			int imageNumber= fromClient.readInt();	
 
@@ -65,16 +67,45 @@ public class ComputationThread extends Thread {
 
 				output= BlurFilter.blur(input,blurSize2);
 				break;
-				
+
 			case HDR_EQUALIZER:
 				int algorithm= fromClient.readInt();
 				int blurSize3= fromClient.readInt();
 
 				if(algorithm==0) output= HDREqualizer.filter(input,blurSize3);
-				else output= HDREqualizer.filter2(input,blurSize3);
-				
+				else output= HDREqualizer.filter2(input,blurSize3, new ProgressBarHandler());
+
 				output= AutoBalance.balanceColors(output);
-				
+
+				break;
+
+			case FOURIER_TRANSFORM:
+				int isLowPassFilterOn= fromClient.readInt();
+				int isScalingLog= fromClient.readInt();
+				int cutFrequency= fromClient.readInt();
+
+				BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
+				Graphics2D g = source.createGraphics();
+				g.drawImage(b, 0, 0, 64, 64, null);
+				g.dispose();
+				System.out.println("image loaded");
+				//makes it a PImage object
+				PImage img = new PImage(source);
+				System.out.println("image converted to PImage");
+				//does a Fourier Transform to create the image's spectrum
+				ImageSpectrum spectrum = new ImageSpectrum(img);
+				System.out.println("spectrum computed");
+
+				if(isLowPassFilterOn==0){
+					output= spectrum.getTransform(isScalingLog==1);
+				} else{	
+					spectrum.lowPassFilter(cutFrequency); // the width of the part we remove in the spectrum
+
+					PImage result = spectrum.getReverseTransform();
+					output = filter.AutoBalance.balanceColors(result);
+
+					System.out.println("reverse transform done");
+				}
 				break;
 
 			case SCAN:
@@ -122,12 +153,12 @@ public class ComputationThread extends Thread {
 				//				}
 				//			});
 				break;
-				
-				default: 
-					break;
+
+			default: 
+				break;
 			}
 
-			ImageIO.write(output.getImage(), extension, toClient);
+			ImageIO.write(output.getImage(), "png", toClient);
 			toClient.writeInt(imageNumber);
 			System.out.println("computationThread: image traitée et renvoyée");
 		} catch (IOException e) {

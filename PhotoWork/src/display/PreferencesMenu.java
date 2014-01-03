@@ -39,8 +39,6 @@ public class PreferencesMenu extends Composite {
 	String[] IPs;
 	Text text;
 
-
-
 	/**
 	 * Create the composite.
 	 * @param parent
@@ -92,10 +90,7 @@ public class PreferencesMenu extends Composite {
 						serverList.add(text.getText());
 						btnRemoveServer.setEnabled(true);
 					} catch (IOException e) {
-						MessageBox mb= new MessageBox(getShell(), SWT.ICON_WARNING | SWT.ABORT);
-						mb.setText("Warning");
-						mb.setMessage("Can't reach entered IP address");
-						mb.open();
+						GUI.showWarningMessage("Can't reach entered IP address");
 					} 
 					finally{
 						text.setText("");	
@@ -161,7 +156,7 @@ public class PreferencesMenu extends Composite {
 
 		for(int i=0; i<fileNames.length; i++){
 			fileList.add(fileNames[i].substring(fileNames[i].lastIndexOf('/') + 1));
-			sizes.add(savedImages[i].getBounds().width+"*"+savedImages[i].getBounds().height+"\n");
+			sizes.add(savedImages[i].getBounds().width+"*"+savedImages[i].getBounds().height);
 		}
 
 		SelectionListener listener = new SelectionAdapter() {
@@ -201,8 +196,6 @@ public class PreferencesMenu extends Composite {
 			}
 		});
 		btnApplyChanges.setText("Apply changes");
-
-
 	}
 
 	boolean areAllFilesSelected(){

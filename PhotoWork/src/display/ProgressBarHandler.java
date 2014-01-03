@@ -1,12 +1,12 @@
 package display;
 
-public class ProgressBar {
+public class ProgressBarHandler {
 
 	private double progress; // in percentage
 	private double speed; // in percentage per second
 	private long lastChangeTime;
 	
-	public ProgressBar() {
+	public ProgressBarHandler() {
 		reset();
 	}
 	

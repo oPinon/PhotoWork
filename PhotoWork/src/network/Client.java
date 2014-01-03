@@ -63,7 +63,6 @@ public class Client extends Thread{
 
 	private void receiveImage() throws IOException, InterruptedException{
 		BufferedImage output = ImageIO.read(fromServer);
-
 		fromServer.skip(16); //on saute deux octets qui ne servent à rien
 		int imageNumber = fromServer.readInt();
 

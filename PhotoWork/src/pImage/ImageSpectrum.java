@@ -34,7 +34,7 @@ public class ImageSpectrum {
 		}
 	}
 
-	public PImage getTransform() {
+	public PImage getTransform(boolean logScaling) {
 		PImage img = new PImage(width,height);
 		for(int fx=0;fx<width;fx++){
 			for(int fy=0;fy<height;fy++){
@@ -43,12 +43,13 @@ public class ImageSpectrum {
 				double g= (GSpectrum.getComplex(fx, fy).getAbs())*(255.0/max);
 				double b= (BSpectrum.getComplex(fx, fy).getAbs())*(255.0/max);
 				
-				
-//				//filtre log
-//				double c= 255.0/Math.log10(1+max);
-//				r=c*Math.log10(1+r);
-//				g=c*Math.log10(1+g);
-//				b=c*Math.log10(1+b);
+				if(logScaling){
+				//filtre log
+				double c= 255.0/Math.log10(1+max);
+				r=c*Math.log10(1+r);
+				g=c*Math.log10(1+g);
+				b=c*Math.log10(1+b);
+				}
 				
 				PColor col = new RGB((int)r,(int)g,(int)b);
 				img.setCol(fx, fy, col);
@@ -97,6 +98,22 @@ public class ImageSpectrum {
 			}
 		}
 		return img;
+	}
+	
+	public void lowPassFilter(int cutFrequency){
+		int f = cutFrequency; // the width of the part we remove in the spectrum
+		for(int x = -f; x <= f; x++){
+			for(int y = -f; y <= f; y++){
+				int x1 = width/2+x;
+				int y1 = height/2+y;
+
+				if(x!=0&&y!=0){ // musn't remove the constant part of the spectrum
+					RSpectrum.setComplex(x1, y1, new Complex(0,0));
+					GSpectrum.setComplex(x1, y1, new Complex(0,0));
+					BSpectrum.setComplex(x1, y1, new Complex(0,0));
+				}
+			}
+		}
 	}
 	
 	public Spectrum getRSpectrum() { return RSpectrum; }

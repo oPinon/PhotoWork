@@ -1,6 +1,6 @@
 package filter;
 
-import display.ProgressBar;
+import display.ProgressBarHandler;
 import pImage.PImage;
 import pImage.RGB;
 
@@ -44,7 +44,7 @@ public class HDREqualizer {
 	/*
 	 * Works really great for generating bas-relief from depth-map
 	 */
-	public static PImage filter2(PImage image, int size, ProgressBar progressBar) {
+	public static PImage filter2(PImage image, int size, ProgressBarHandler progressBar) {
 		
 		//long t0 = System.currentTimeMillis();
 		PImage expanded = BlurFilter.expand(image,size);
