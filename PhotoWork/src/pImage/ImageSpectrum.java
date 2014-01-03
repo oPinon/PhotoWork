@@ -100,7 +100,7 @@ public class ImageSpectrum {
 		return img;
 	}
 	
-	public void lowPassFilter(int cutFrequency){
+	public void highPassFilter(int cutFrequency){
 		int f = cutFrequency; // the width of the part we remove in the spectrum
 		for(int x = -f; x <= f; x++){
 			for(int y = -f; y <= f; y++){

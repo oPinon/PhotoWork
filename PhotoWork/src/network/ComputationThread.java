@@ -80,7 +80,7 @@ public class ComputationThread extends Thread {
 				break;
 
 			case FOURIER_TRANSFORM:
-				int isLowPassFilterOn= fromClient.readInt();
+				int isHighPassFilterOn= fromClient.readInt();
 				int isScalingLog= fromClient.readInt();
 				int cutFrequency= fromClient.readInt();
 
@@ -96,10 +96,10 @@ public class ComputationThread extends Thread {
 				ImageSpectrum spectrum = new ImageSpectrum(img);
 				System.out.println("spectrum computed");
 
-				if(isLowPassFilterOn==0){
+				if(isHighPassFilterOn==0){
 					output= spectrum.getTransform(isScalingLog==1);
 				} else{	
-					spectrum.lowPassFilter(cutFrequency); // the width of the part we remove in the spectrum
+					spectrum.highPassFilter(cutFrequency); // the width of the part we remove in the spectrum
 
 					PImage result = spectrum.getReverseTransform();
 					output = filter.AutoBalance.balanceColors(result);

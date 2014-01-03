@@ -5,7 +5,7 @@ import org.eclipse.swt.widgets.*;
 
 public class FileBrowser {
 	Shell shell;
-	public String[] chosenFiles;
+	String[] chosenFiles;
 	int extension;
 
 	public FileBrowser(Display display, int action) {

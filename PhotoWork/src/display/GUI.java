@@ -1,24 +1,9 @@
 package display;
 
-import gAPainter.Painter;
-
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import javax.imageio.ImageIO;
-
-import network.Buffer;
-import network.Client;
-import network.FormatConversion;
-import network.Result;
 import network.Server;
-import network.Task;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -53,16 +38,9 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.wb.swt.SWTResourceManager;
-import org.eclipse.swt.custom.ScrolledComposite;
-
-import filter.AutoBalance;
-import filter.BlurFilter;
-import filter.ImageFunction;
-import pImage.PImage;
-import pImage.Scanner;
-
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.layout.RowLayout;
+
+import filter.ImageFunction;
 
 public class GUI extends Composite  {
 
@@ -73,6 +51,7 @@ public class GUI extends Composite  {
 	private static Shell shell;
 
 	//RESEAU
+	private static ImageUpdater updater;
 	private static Server server; //traite les taches envoyées par les PC
 
 	//AFFICHAGE GRAPHIQUE
@@ -111,20 +90,19 @@ public class GUI extends Composite  {
 	ImageFunction selectedFunction;
 
 	//Fonctions de filtre (Auto Balance, Blur, HDR)
-	int autoBalanceType;//Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
-	Spinner blurSize;
-	Button blurCheckButton;
-	List HDRAlgorithm;
-	
+	int autoBalanceType; //Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
+	int blurSize;
+	int HDRAlgorithm;
+
 	//DFT
 	int scaleMethod;
-	List DFTMode;
-	Spinner cutFrequency;
-	
+	int DFTMode;
+	int cutFrequency;
+
 	//Scan
 	int[] scanPointsX= new int[4];
 	int[] scanPointsY= new int[4];
-	List scanFormat;
+	int scanFormat;
 
 	//GA Painter
 	Button btnStop;
@@ -158,7 +136,6 @@ public class GUI extends Composite  {
 		btnRefresh.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		btnRefresh.setImage(new Image(display,"images/refresh.png"));
 		btnRefresh.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if(image == null){ 
 					showWarningMessage("Please select a file to work on");
@@ -172,7 +149,6 @@ public class GUI extends Composite  {
 		btnUndo.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
 		btnUndo.setImage(new Image(display,"images/undo.png"));
 		btnUndo.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if(image == null){ 
 					showWarningMessage("Please select a file to work on");
@@ -195,8 +171,12 @@ public class GUI extends Composite  {
 		btnLoadFiles.setText("Load Files");
 		btnLoadFiles.setImage(new Image(display,"images/load.png"));
 		btnLoadFiles.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
+				if(updater!=null && updater.isAlive()){ 
+					showWarningMessage("Please wait for the current treatment to end");
+					return;
+				}
+
 				FileBrowser browser= new FileBrowser(display, SWT.OPEN);
 				if(browser.chosenFiles!=null){
 					fileNames = browser.chosenFiles;
@@ -209,10 +189,10 @@ public class GUI extends Composite  {
 
 					zoomRatio=1;
 					zoomLabel.setText(("Zoom: "+100+"%"));
-					infoLabel.setText("Opened "+fileNames.length+" file(s)");	
+					print("Opened "+fileNames.length+" file(s)",true);	
 
 					selectedImageNumber= 0;
-					updateImageNumber();
+					refreshDisplay();
 				}
 			}
 		});
@@ -222,7 +202,6 @@ public class GUI extends Composite  {
 		btnSaveFiles.setText("Save Files");
 		btnSaveFiles.setImage(new Image(display,"images/save.png"));
 		btnSaveFiles.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if(image == null){ 
 					showWarningMessage("There is no file to save");
@@ -243,7 +222,7 @@ public class GUI extends Composite  {
 							loader.data = new ImageData[] {savedImages[i].getImageData()};
 							loader.save((name.substring(0,name.lastIndexOf(".")))+"["+i+"]"+(name.substring(name.lastIndexOf("."))), browser.extension);
 						}
-					infoLabel.setText("Saved in: "+name);
+					print("Saved in: "+name,false);
 				}
 			}
 		});
@@ -256,12 +235,11 @@ public class GUI extends Composite  {
 
 		Button btnPrevious = new Button(compositeImageNumber, SWT.ARROW | SWT.LEFT);
 		btnPrevious.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if(savedImages==null) return;
 				if(selectedImageNumber==0) selectedImageNumber= savedImages.length-1;	
 				else selectedImageNumber--;
-				updateImageNumber();
+				refreshDisplay();
 			}
 		});
 
@@ -271,12 +249,11 @@ public class GUI extends Composite  {
 
 		Button btnNext = new Button(compositeImageNumber, SWT.ARROW | SWT.RIGHT);
 		btnNext.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {				
 				if(savedImages==null) return;
 				if(selectedImageNumber==savedImages.length-1) selectedImageNumber= 0;	
 				else selectedImageNumber++;
-				updateImageNumber();
+				refreshDisplay();
 			}
 		});
 
@@ -285,7 +262,6 @@ public class GUI extends Composite  {
 		btnPreferences.setImage(new Image(display,"images/prefs.png"));
 		btnPreferences.setText("Preferences");
 		btnPreferences.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if(image == null){ 
 					showWarningMessage("Please select a file to work on");
@@ -305,7 +281,7 @@ public class GUI extends Composite  {
 
 				prefShell.addListener(SWT.Close, new Listener() {
 					public void handleEvent(Event event) {
-						infoLabel.setText("Preferences changes saved");
+						print("\n"+"Preferences changes saved",false);
 						workOnAllFiles= preferences.areAllFilesSelected();
 						nbThreads= preferences.getNbThreads();
 						IPList= preferences.getIPList();
@@ -328,89 +304,147 @@ public class GUI extends Composite  {
 		compositeMenu.setText("Menu");
 
 		Group grpAllImages = new Group(compositeMenu, SWT.NONE);
+		grpAllImages.setLayout(new GridLayout(2, false));
+		grpAllImages.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		grpAllImages.setBackground(SWTResourceManager.getColor(SWT.COLOR_LINK_FOREGROUND));
-		grpAllImages.setLayout(new FillLayout(SWT.VERTICAL));
-		GridData gd_grpAllImages = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
-		gd_grpAllImages.heightHint = 163;
-		grpAllImages.setLayoutData(gd_grpAllImages);
 		grpAllImages.setText("All images");
 
 		Button btnAutoBalance = new Button(grpAllImages, SWT.NONE);
-		btnAutoBalance.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnAutoBalance.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnAutoBalance.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnAutoBalance.setImage(new Image(display,"images/autoBalance.png"));
 		btnAutoBalance.setText("Auto Balance");	
 		btnAutoBalance.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.AUTO_BALANCE;
 				createOptionsMenu();
 			}
 		});
 
+		Button button = new Button(grpAllImages, SWT.NONE);
+		button.setText("?");
+		button.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));	
+		button.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
+			}
+		});
+
 		Button btnBlur = new Button(grpAllImages, SWT.NONE);
-		btnBlur.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnBlur.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnBlur.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnBlur.setImage(new Image(display,"images/blur.png"));
 		btnBlur.setText("Blur");
 		btnBlur.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.BLUR;
 				createOptionsMenu();
 			}
 		});
 
+		Button button_1 = new Button(grpAllImages, SWT.NONE);
+		button_1.setText("?\r\n");
+		button_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
+		button_1.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button_1.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
+			}
+		});
+
 		Button btnHDR = new Button(grpAllImages, SWT.NONE);
-		btnHDR.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnHDR.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnHDR.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnHDR.setImage(new Image(display,"images/hdr.png"));
 		btnHDR.setText("HDR Equalizer");
 		btnHDR.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.HDR_EQUALIZER;
 				createOptionsMenu();
 			}
 		});
 
+		Button button_2 = new Button(grpAllImages, SWT.NONE);
+		button_2.setText("?");
+		button_2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
+		button_2.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button_2.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
+			}
+		});
+
 		Button btnFourier = new Button(grpAllImages, SWT.NONE);
-		btnFourier.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnFourier.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnFourier.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnFourier.setImage(new Image(display,"images/DFT.png"));
-		btnFourier.setText("DFT");
+		btnFourier.setText("DFT");	
 		btnFourier.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.FOURIER_TRANSFORM;
 				createOptionsMenu();
 			}
 		});
 
+		Button button_3 = new Button(grpAllImages, SWT.NONE);
+		button_3.setText("?");
+		button_3.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
+		button_3.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button_3.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
+			}
+		});
+
 		Group grpCurrentImageOnly = new Group(compositeMenu, SWT.NONE);
-		grpCurrentImageOnly.setBackground(SWTResourceManager.getColor(SWT.COLOR_LINK_FOREGROUND));
-		grpCurrentImageOnly.setLayout(new FillLayout(SWT.VERTICAL));
+		grpCurrentImageOnly.setLayout(new GridLayout(2, false));
 		grpCurrentImageOnly.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		grpCurrentImageOnly.setBackground(SWTResourceManager.getColor(SWT.COLOR_LINK_FOREGROUND));
 		grpCurrentImageOnly.setText("Current image only");
 
 
 		Button btnScan = new Button(grpCurrentImageOnly, SWT.NONE);
-		btnScan.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnScan.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnScan.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnScan.setImage(new Image(display,"images/scanner.png"));
 		btnScan.setText("Scan");		
 		btnScan.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.SCAN;
 				createOptionsMenu();
 			}
 		});
 
+		Button button_4 = new Button(grpCurrentImageOnly, SWT.NONE);
+		button_4.setText("?");
+		button_4.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
+		button_4.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button_4.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
+			}
+		});
+
 		Button btnGAPainter = new Button(grpCurrentImageOnly, SWT.NONE);
-		btnGAPainter.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.NORMAL));
+		btnGAPainter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		btnGAPainter.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.NORMAL));
 		btnGAPainter.setImage(new Image(display,"images/GA.png"));
-		btnGAPainter.setText("GA Painter");
+		btnGAPainter.setText("GA Painter");		
 		btnGAPainter.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				selectedFunction= ImageFunction.GA_PAINTER;
 				createOptionsMenu();
+			}
+		});
+
+		Button button_5 = new Button(grpCurrentImageOnly, SWT.NONE);
+		button_5.setText("?");
+		button_5.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
+		button_5.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		button_5.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent arg0) {
+				showHelpMessage("");
 			}
 		});
 
@@ -437,7 +471,7 @@ public class GUI extends Composite  {
 		gd_infoLabel.heightHint = 40;
 		infoLabel.setLayoutData(gd_infoLabel);
 		infoLabel.setEditable(false);
-		infoLabel.setText("Ready");
+		print("Ready",true);
 
 		progressBar = new ProgressBar(this, SWT.SMOOTH);
 		progressBar.setMinimum(0);
@@ -448,10 +482,7 @@ public class GUI extends Composite  {
 		progressBar.setLayoutData(gd_progressBar);	
 		progressBar.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
-				String string =
-						(progressBar.getSelection() * 1.0 /
-								(progressBar.getMaximum()-progressBar.getMinimum()) * 100)
-								+ "%";
+				String string =	progressBar.getSelection() + "%";
 				Point point = progressBar.getSize();
 
 				FontMetrics fontMetrics = e.gc.getFontMetrics();
@@ -478,7 +509,6 @@ public class GUI extends Composite  {
 		btnApply.setText("Apply !");
 		btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
 		btnApply.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				apply();
 			}
@@ -494,7 +524,7 @@ public class GUI extends Composite  {
 		server.start();
 	}
 
-	private void createOptionsMenu(){
+	void createOptionsMenu(){
 		if(image == null){ 
 			showWarningMessage("Please select a file to work on");
 			return;
@@ -520,26 +550,42 @@ public class GUI extends Composite  {
 		case AUTO_BALANCE:
 			optionsComposite.setLayout(new GridLayout(1, true));
 
-			autoBalanceType= 0;
+			autoBalanceType= 0;	
+			blurSize= 10;
 
 			final Button btnNewButton_10 = new Button(optionsComposite, SWT.RADIO);
 			btnNewButton_10.setText("Balance Brightness");
 			btnNewButton_10.setSelection(true);
+
+			final Button btnNewButton_11 = new Button(optionsComposite, SWT.RADIO);
+			btnNewButton_11.setText("Balance Colors");
+
+
+			final Button blurCheckButton = new Button(optionsComposite, SWT.CHECK);
+			blurCheckButton.setText("Blur");
+			blurCheckButton.setEnabled(false);
+
+			Label lblNewLabel = new Label(optionsComposite, SWT.NONE);
+			lblNewLabel.setText("Blur Size (px):");
+			final Spinner size = new Spinner(optionsComposite, SWT.BORDER);
+			size.setSelection(blurSize);
+			size.setEnabled(false);	
+
+			size.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					blurSize= size.getSelection();
+				}
+			});
 			btnNewButton_10.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					if(btnNewButton_10.getSelection()){
 						autoBalanceType=0;
 						blurCheckButton.setEnabled(false);
-						blurSize.setEnabled(false);
+						size.setEnabled(false);
 					}
 				}
-			});
-
-			final Button btnNewButton_11 = new Button(optionsComposite, SWT.RADIO);
-			btnNewButton_11.setText("Balance Colors");
+			});			
 			btnNewButton_11.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					if(btnNewButton_11.getSelection()){
 						autoBalanceType= 1;
@@ -548,65 +594,73 @@ public class GUI extends Composite  {
 					}
 				}
 			});
-
-			blurCheckButton = new Button(optionsComposite, SWT.CHECK);
-			blurCheckButton.setText("Blur");
-			blurCheckButton.setEnabled(false);
 			blurCheckButton.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
-					blurSize.setEnabled(blurCheckButton.getSelection());
+					size.setEnabled(blurCheckButton.getSelection());
 					if(blurCheckButton.getSelection()) autoBalanceType= 2;
 					else autoBalanceType= 1;
 				}
 			});
-
-
-			Label lblNewLabel = new Label(optionsComposite, SWT.NONE);
-			lblNewLabel.setText("Blur Size (px):");
-			blurSize = new Spinner(optionsComposite, SWT.BORDER);
-			blurSize.setSelection(10);
-			blurSize.setEnabled(false);
 			break;
 
 		case BLUR:
 			optionsComposite.setLayout(new GridLayout(1, true));
+			blurSize= 10;
 
 			Label lblNewLabel1 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel1.setText("Blur Size (px):");
-			blurSize = new Spinner(optionsComposite, SWT.BORDER);
-			blurSize.setSelection(10);
+			final Spinner size2 = new Spinner(optionsComposite, SWT.BORDER);
+
+			size2.setSelection(blurSize);
+			size2.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					blurSize= size2.getSelection();
+				}
+			});
 			break;
 
 		case HDR_EQUALIZER:
 			optionsComposite.setLayout(new GridLayout(1, true));
+			blurSize= 50;
+			HDRAlgorithm= 0;
 
 			Label lblNewLabel2 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel2.setText("Blur Size (px):");
-			blurSize = new Spinner(optionsComposite, SWT.BORDER);
-			blurSize.setSelection(50);
+			final Spinner size3 = new Spinner(optionsComposite, SWT.BORDER);	
+			size3.setSelection(blurSize);
+			size3.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					blurSize= size3.getSelection();
+				}
+			});
 
 			Label lblNewLabel21 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel21.setText("Algorithm:");
-			HDRAlgorithm= new List(optionsComposite, SWT.NONE);
-			HDRAlgorithm.add("Adaptive histogram equalization");
-			HDRAlgorithm.add("Bas-relief from depth map");
-			HDRAlgorithm.setSelection(0);
+			final List algorithm= new List(optionsComposite, SWT.NONE);
+			algorithm.add("Adaptive histogram equalization");
+			algorithm.add("Bas-relief from depth map");
+			algorithm.setSelection(HDRAlgorithm);
+			algorithm.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					HDRAlgorithm= algorithm.getSelectionIndex();
+				}
+			});
+
 			break;
-			
+
 		case FOURIER_TRANSFORM:
 			optionsComposite.setLayout(new GridLayout(1, true));
-			
+			DFTMode= 0;
 			scaleMethod= 1;
+			cutFrequency= 8;
 			final Button btnLog,btnLin;
-			
-			
+
 			Label lblNewLabel22 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel22.setText("DFT Type:");
-			DFTMode = new List(optionsComposite, SWT.CHECK);
-			DFTMode.add("Image spectrum");
-			DFTMode.add("Low-pass filter");
-			DFTMode.setSelection(0);
+			final List mode = new List(optionsComposite, SWT.CHECK);
+			mode.add("Image spectrum");
+			mode.add("High-pass filter");
+			mode.setSelection(DFTMode);		
 
 			Label lblNewLabel23 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel23.setText("Scaling:");	
@@ -614,7 +668,6 @@ public class GUI extends Composite  {
 			btnLog.setText("Logarithmic");
 			btnLog.setSelection(true);
 			btnLog.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					if(btnLog.getSelection()){
 						scaleMethod= 1;
@@ -624,28 +677,32 @@ public class GUI extends Composite  {
 			btnLin = new Button(optionsComposite, SWT.RADIO);
 			btnLin.setText("Linear");
 			btnLin.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					if(btnLin.getSelection()){
 						scaleMethod= 0;
 					}
 				}
 			});	
-			
-			DFTMode.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent arg0) {
-					cutFrequency.setEnabled(DFTMode.getSelectionIndex()==1);
-					btnLog.setEnabled(DFTMode.getSelectionIndex()==0);
-					btnLin.setEnabled(DFTMode.getSelectionIndex()==0);
-				}
-			});
-			
+
+
 			Label lblNewLabel24 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel24.setText("Cutoff frequency");
-			cutFrequency = new Spinner(optionsComposite, SWT.BORDER);
-			cutFrequency.setEnabled(false);
-			cutFrequency.setSelection(8);
+			final Spinner cutoff = new Spinner(optionsComposite, SWT.BORDER);
+			cutoff.setEnabled(false);
+			cutoff.setSelection(cutFrequency);
+			cutoff.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					cutFrequency= cutoff.getSelection();
+				}
+			});
+			mode.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					DFTMode= mode.getSelectionIndex();
+					cutoff.setEnabled(DFTMode==1);
+					btnLog.setEnabled(DFTMode==0);
+					btnLin.setEnabled(DFTMode==0);
+				}
+			});
 			break;
 
 		case SCAN:
@@ -689,7 +746,6 @@ public class GUI extends Composite  {
 
 			Button btnClear = new Button(optionsComposite, SWT.NONE);
 			btnClear.addSelectionListener(new SelectionAdapter() {
-				@Override
 				public void widgetSelected(SelectionEvent arg0) {
 					savedImages[selectedImageNumber] = new Image(display, imageWithoutPoints, SWT.IMAGE_COPY);
 					refreshDisplay();
@@ -707,14 +763,17 @@ public class GUI extends Composite  {
 			btnClear.setText("Clear");		
 			new Label(optionsComposite, SWT.NONE);
 
-			scanFormat = new List(optionsComposite, SWT.V_SCROLL);
-			scanFormat.setItems(new String[] {"A0 (841*1189)", "A1 (594*841)", "A2 (420*594)", "A3 (297*420)",
+			final List format = new List(optionsComposite, SWT.V_SCROLL);
+			format.setItems(new String[] {"A0 (841*1189)", "A1 (594*841)", "A2 (420*594)", "A3 (297*420)",
 					"A4 (210*297)", "A5 (148*210)", "A6 (105*148)"});
-			scanFormat.setSelection(4);
-
+			format.setSelection(4);
+			format.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					scanFormat= format.getSelectionIndex();
+				}
+			});	
 
 			imageFrame.addMouseListener(new MouseAdapter() {
-				@Override
 				public void mouseDown(MouseEvent arg0) {
 					if(gc==null || gc.isDisposed()) gc= new GC(imageFrame);
 					gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
@@ -749,7 +808,7 @@ public class GUI extends Composite  {
 					if(lblNewLabel32.getText().length()!=0 && lblNewLabel33.getText().length()!=0 && lblNewLabel42.getText().length()!=0 && 
 							lblNewLabel43.getText().length()!=0 && lblNewLabel52.getText().length()!=0 && lblNewLabel53.getText().length()!=0 &&
 							lblNewLabel62.getText().length()!=0 && lblNewLabel63.getText().length()!=0){
-						infoLabel.setText("Scan points saved");
+						print("\n"+"Scan points saved",false);
 						btnApply.setEnabled(true);
 					}
 				}
@@ -769,6 +828,10 @@ public class GUI extends Composite  {
 	}
 
 	private void apply(){
+		if(updater!=null && updater.isAlive()){ 
+			showWarningMessage("Please wait for the current treatment to end");
+			return;
+		}
 		if(image == null){ 
 			showWarningMessage("Please select a file to work on");
 			return;
@@ -782,147 +845,18 @@ public class GUI extends Composite  {
 			return;
 		}
 
-		long t1= System.currentTimeMillis();
-		progressBar.setSelection(0);
-
-		Image[] imagesToModify;
-		int count;	
-		if((selectedFunction.isApplicableOnAllFiles()) && workOnAllFiles){
-			imagesToModify= savedImages;
-			count= 0;
-		}
-		else{
-			imagesToModify= new Image[1];
-			count= selectedImageNumber;
-			imagesToModify[0]= savedImages[count];
-		}
-
-		int tasksLeft= imagesToModify.length;
-		Buffer<Task> tasksToDo= new Buffer<Task>();
-		Buffer<Result> tasksDone= new Buffer<Result>();
-
-		java.util.List<Client> clients= new ArrayList<Client>();
-		for(String s: IPList){
-			Client c= new Client(s, tasksToDo, tasksDone);
-			clients.add(c);
-			c.start();
-		}
-
-		for(Image i: imagesToModify){		
-			ImageData id= i.getImageData();
-			BufferedImage input= FormatConversion.convertToAWT(id);
-
-			Task task = null;
-
-			switch(selectedFunction){
-			case AUTO_BALANCE:
-				task= new Task(input, selectedFunction, count, new int[]{nbThreads, autoBalanceType, blurSize.getSelection()});
-				break;
-
-			case BLUR:
-				task= new Task(input, selectedFunction, count, new int[]{blurSize.getSelection()});
-				break;
-
-			case HDR_EQUALIZER:
-				task= new Task(input, selectedFunction, count, new int[]{HDRAlgorithm.getSelectionIndex(), blurSize.getSelection()});
-				break;
-				
-			case FOURIER_TRANSFORM:
-				task= new Task(input, selectedFunction, count, new int[]{DFTMode.getSelectionIndex(), scaleMethod, cutFrequency.getSelection()});
-				break;
-
-			case SCAN:
-				task= new Task(input, selectedFunction, count, new int[]{nbThreads,scanPointsX[0],scanPointsX[1],
-						scanPointsX[2],scanPointsX[3],scanPointsY[0],scanPointsY[1],scanPointsY[2],scanPointsY[3],
-						scanFormat.getSelectionIndex()});
-				break;
-
-			case GA_PAINTER:	
-				//			final Painter p= new Painter(FormatConversion.convertToAWT(id));		
-				//			p.start();
-				//
-				//
-				//			final Timer t = new Timer();
-				//			t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
-				//				GC GAgc=null;	
-				//				if(p.output!=null){
-				//					final Image output= new Image(display,savedImages[selectedImageNumber].getBounds().width*2,savedImages[selectedImageNumber].getBounds().height);
-				//
-				//					if(GAgc==null || GAgc.isDisposed()){
-				//						GAgc= new GC(output);
-				//					}
-				//					GAgc.drawImage(savedImages[selectedImageNumber],0, 0);
-				//					GAgc.drawImage(new Image(display,FormatConversion.convertToSWT(p.output)),savedImages[selectedImageNumber].getBounds().width, 0);
-				//					GAgc.dispose();			
-				//					Display.getDefault().asyncExec(new Runnable() {
-				//						public void run() {
-				//							resizeImage(output);
-				//						}
-				//					});
-				//				}
-				//			}}
-				//			,0,1000l);
-				//
-				//			btnStop.addSelectionListener(new SelectionAdapter() {
-				//				@Override
-				//				public void widgetSelected(SelectionEvent arg0) {
-				//					t.cancel();
-				//					p.interrupt();
-				//				}
-				//			});
-				break;
-			default:
-				break;	
-			}
-
-			try {
-				tasksToDo.put(task);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return;
-			}
-			count++;
-		}
-
-		while(tasksLeft>0){
-			Result r;
-			try {
-				r = tasksDone.take();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return;
-			}
-			BufferedImage output= new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
-			int number= r.getImageNumber();
-
-			Image i= new Image(getDisplay(), FormatConversion.convertToSWT(output));
-			savedImages[number]= i;	
-
-			infoLabel.append("\n"+selectedFunction.getName()+" done for image "+(number+1));
-			infoLabel.setTopIndex(infoLabel.getLineCount() - 1);
-
-			tasksLeft--;
-			progressBar.setSelection(100-(tasksLeft*100/imagesToModify.length));
-		}
-
-		for(Client c: clients) c.interrupt();
-
-		if(selectedFunction==ImageFunction.SCAN) createOptionsMenu(); //réinitialisation du scan
-		long t2= System.currentTimeMillis();
-		infoLabel.append("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)");
-		refreshDisplay();
+		updater= new ImageUpdater(this, selectedFunction, workOnAllFiles, savedImages, selectedImageNumber, IPList, 
+				nbThreads, autoBalanceType, blurSize, HDRAlgorithm, DFTMode, scaleMethod, cutFrequency, 
+				scanPointsX, scanPointsY, scanFormat);
+		updater.start();
 	}
 
-	private void updateImageNumber() {
+	void refreshDisplay(){
 		imageNumber.setText((selectedImageNumber+1)+"/"+savedImages.length);
 		titleLabel.setText(fileNames[selectedImageNumber].substring(fileNames[selectedImageNumber].lastIndexOf('/') + 1));
-		refreshDisplay();
-	}
-
-	private void refreshDisplay(){
 		Image img= savedImages[selectedImageNumber];
 		if(img==null) return;
-		
+
 		int imgWidth=img.getBounds().width;
 		int imgHeight=img.getBounds().height;
 
@@ -941,6 +875,23 @@ public class GUI extends Composite  {
 		gc.dispose();
 	}
 
+	void updateImage(Image img, int number, ImageFunction appliedFunction){
+		if(savedImages!=null){
+			savedImages[number]= img;
+			print("\n"+appliedFunction.getName()+" done for image "+(number+1), false);
+		}
+	}
+
+	public void setProgressBarSelection(int selection){
+		progressBar.setSelection(selection);
+	}
+
+	public void print(String s, boolean clear){
+		if(clear) infoLabel.setText("");
+		infoLabel.append(s);
+		infoLabel.setTopIndex(infoLabel.getLineCount() - 1);
+	}
+
 	public static void showWarningMessage(String message){
 		MessageBox mb= new MessageBox(shell, SWT.ICON_WARNING | SWT.ABORT);
 		mb.setText("Warning");
@@ -948,7 +899,13 @@ public class GUI extends Composite  {
 		mb.open();
 		return;
 	}
-
+	public static void showHelpMessage(String message){
+		MessageBox mb= new MessageBox(shell, SWT.ICON_INFORMATION | SWT.ABORT);
+		mb.setText("Help");
+		mb.setMessage(message);
+		mb.open();
+		return;
+	}
 	@Override
 	protected void checkSubclass() {
 		// Disable the check that prevents subclassing of SWT display
