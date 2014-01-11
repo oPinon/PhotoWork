@@ -6,4 +6,5 @@ public interface Shape {
 
 	public void mutate();
 	public void paint(Graphics g, int scale);
+	public void paint(Graphics g);
 }

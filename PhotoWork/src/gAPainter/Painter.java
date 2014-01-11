@@ -16,27 +16,33 @@ public class Painter {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		BufferedImage source = ImageIO.read( new File("monaLisa.png"));
-		Sketch.isTriangle = false;
+		int scale = 1;
+		
+		BufferedImage source = ImageIO.read( new File("mutation.png"));
+		BufferedImage sourceHQ = new BufferedImage(source.getWidth()*scale,source.getHeight()*scale,BufferedImage.TYPE_INT_RGB);
+		java.awt.Graphics g = sourceHQ.getGraphics();
+		g.drawImage(source, 0, 0, source.getWidth()*scale, source.getHeight()*scale, null);
 		
 		Painter p = new Painter(source);
 		
-		Display d = new Display(source);
+		Display d = new Display(sourceHQ);
 		int i=0;
 		long t = System.currentTimeMillis();
 		
 		while(true) {
 			p.mutate();
-			d.setImage(p.getBest(1));
 			//ImageIO.write(p.getBest(1), "png", new File("render.png"));
 			i++;
-			if(i%100==0) { System.out.println("fitness = "+p.bestFitness()+
+			if(i%100==0) {
+				d.setImage(p.getBest(scale));
+				System.out.println("fitness = "+p.bestFitness()+
 					"; time = "+((System.currentTimeMillis()-t)/1000)); }
 		}
 	}
 
 	private BufferedImage source;
-	static int sketchPop = 200;
+	static int triPop = 100;
+	static int cirPop = 100;
 	private int width, height, pop = 5, birthFac = 10;
 	private Sketch s;
 	private int fitness;
@@ -45,7 +51,7 @@ public class Painter {
 		this.source = source;
 		this.width = source.getWidth(); this.height = source.getHeight();
 
-		s = new Sketch(width,height,sketchPop);
+		s = new Sketch(width,height,triPop,cirPop);
 		fitness = getDiff(s.getIm());
 	}
 
@@ -53,7 +59,6 @@ public class Painter {
 
 		Sketch s2 = new Sketch(s);
 		s2.mutate();
-		s2.merge(s, 0.5);
 		int fitness2 = getDiff(s2.getIm());
 		if(fitness2<fitness) {
 			fitness=fitness2;

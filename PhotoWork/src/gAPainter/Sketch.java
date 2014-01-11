@@ -9,64 +9,60 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class Sketch {
-	
-	static boolean isTriangle = false;;
-	
-	private int width, height, pop;
-	private Shape[] shapes;
+		
+	private int width, height, triPop, cirPop;
+	private Triangle[] triangles;
+	private Circle[] circles;
 	private BufferedImage image;
 	
-	public Sketch(int width, int height, int pop) {
+	public Sketch(int width, int height, int triPop, int cirPop) {
 		this.width=width;
 		this.height=height;
-		this.pop=pop;
-		shapes = new Shape[pop];
-		for(int i=0;i<pop;i++) {
+		this.triPop=triPop;
+		this.cirPop=cirPop;
+		this.triangles = new Triangle[triPop];
+		this.circles = new Circle[cirPop];
+		for(int i=0;i<triPop;i++) {
 			int x = (int) (width*Math.random());
 			int y = (int) (height*Math.random());
 			int size = (int) ((height/10)*(1+3*Math.random()));
-			if(isTriangle) {shapes[i]=new Triangle(x,y,size); }
-			else {shapes[i]=new Circle(x,y,size);}
+			triangles[i]=new Triangle(x,y,size);
+		}
+		for(int i=0;i<cirPop;i++) {
+			int x = (int) (width*Math.random());
+			int y = (int) (height*Math.random());
+			int size = (int) ((height/10)*(1+3*Math.random()));
+			circles[i]=new Circle(x,y,size);
 		}
 		image = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
-		//updateImage();
+		updateImage();
 	}
 	
 	public Sketch(Sketch other) {
 		this.width = other.width;
 		this.height = other.height;
-		this.pop = other.pop;
-		this.shapes = new Shape[pop];
-		for(int i=0;i<pop;i++) {
-			if(isTriangle) {this.shapes[i]=new Triangle((Triangle)other.shapes[i]);}
-			else {this.shapes[i]=new Circle((Circle)other.shapes[i]);}
+		this.triPop=other.triPop;
+		this.cirPop=other.cirPop;
+		this.triangles = new Triangle[triPop];
+		this.circles = new Circle[cirPop];
+		for(int i=0;i<triPop;i++) {
+			this.triangles[i]= new Triangle(other.triangles[i]);
+		}
+		for(int i=0;i<cirPop;i++) {
+			this.circles[i]= new Circle(other.circles[i]);
 		}
 		image = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
-		//updateImage();
+		updateImage();
 	}
 	
 	public void mutate() {
-		for(int i=0;i<pop;i++) {
-			if(Math.random()<0.4) { this.shapes[i].mutate(); }
+		for(int i=0;i<triPop;i++) {
+			if(Math.random()<0.4) { this.triangles[i].mutate(); }
 		}
-		//updateImage();
-	}
-	
-	/*
-	 * ratio is the percentage of each parent's DNA you keep. A ratio of 0.5 will keep the DNA's size.
-	 */
-	public void merge(Sketch other, double ratio) {
-		
-		int newSize = (int)(2*ratio*pop);
-		Shape[] newShapes = new Shape[newSize];
-		int k = 0;
-		for(int i=0; i<newSize;i++){
-			if(k>=pop){k=0;}
-			if(Math.random()<0.5){ newShapes[i]=this.shapes[k]; }
-			else { newShapes[i]=other.shapes[k]; }
-			k++;
+		for(int i=0;i<cirPop;i++) {
+			if(Math.random()<0.4) { this.circles[i].mutate(); }
 		}
-		this.shapes = newShapes;
+		updateImage();
 	}
 	
 	public BufferedImage render(int scale) {
@@ -77,20 +73,32 @@ public class Sketch {
 	}
 	
 	public BufferedImage getIm() {
-		updateImage();
 		return image;
 	}
 	
 	public void updateImage() {
 		Graphics g = image.getGraphics();
-		paint(g,1);
+		paint(g);
 	}
 
 	public void paint(Graphics g, int scale) {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, width, height);
-		for(int i=0;i<pop;i++) { 
-			shapes[i].paint(g, scale);
+		for(int i=0;i<triPop;i++) { 
+			triangles[i].paint(g, scale);
+		}
+		for(int i=0;i<cirPop;i++) { 
+			circles[i].paint(g, scale);
+		}
+	}
+	public void paint(Graphics g) {
+		g.setColor(Color.black);
+		g.fillRect(0, 0, width, height);
+		for(int i=0;i<triPop;i++) { 
+			triangles[i].paint(g);
+		}
+		for(int i=0;i<cirPop;i++) { 
+			circles[i].paint(g);
 		}
 	}
 }

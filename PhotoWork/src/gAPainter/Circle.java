@@ -51,4 +51,10 @@ public class Circle implements Shape{
 		((Graphics2D) g).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.fillOval((x-size/2)*scale, (y-size/2)*scale, size*scale, size*scale);
 	}
+	
+	public void paint(Graphics g) {
+		g.setColor(color);
+		((Graphics2D) g).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.fillOval(x-size/2, y-size/2, size, size);
+	}
 }

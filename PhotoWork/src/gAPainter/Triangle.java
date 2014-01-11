@@ -60,6 +60,18 @@ public class Triangle implements Shape {
 	public void paint(Graphics g, int scale) {
 		g.setColor(color);
 		((Graphics2D) g).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		int[] x2 = new int[3];
+		int[] y2 = new int[3];
+		for(int i=0; i<3; i++) {
+			x2[i]=x[i]*scale;
+			y2[i]=y[i]*scale;
+		}
+		g.fillPolygon(x2,y2, 3);
+	}
+	
+	public void paint(Graphics g) {
+		g.setColor(color);
+		((Graphics2D) g).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.fillPolygon(x,y, 3);
 	}
 }
