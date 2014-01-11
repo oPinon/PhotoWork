@@ -1,5 +1,6 @@
 package display;
 
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -86,10 +87,10 @@ public class GUI extends Composite  {
 	//Dessins sur l'affichage d'image
 	GC gc;
 
-	//Barre de progression
-	ProgressBar progressBar;
-
-
+	//Barres de progression
+	PWProgressBar globalProgressBar;
+	PWProgressBar localProgressBar;
+	
 	//PARAMETRES
 	//Nom des fichiers chargés
 	String[] fileNames;
@@ -97,14 +98,10 @@ public class GUI extends Composite  {
 	ImageFunction selectedFunction;
 
 	//Fonctions de filtre (Auto Balance, Blur, HDR)
-	int autoBalanceType; //Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
-	int blurSize;
-	int HDRAlgorithm;
+	int autoBalanceType, blurSize, HDRAlgorithm; //Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
 
 	//DFT
-	int scaleMethod;
-	int DFTMode;
-	int cutFrequency;
+	int DFTMode, scaleMethod, cutFrequency;
 
 	//Scan
 	int[] scanPointsX= new int[4];
@@ -115,13 +112,11 @@ public class GUI extends Composite  {
 	Button btnStop;
 
 	//Menu Préférences
-	PreferencesMenu preferences;
 	boolean workOnAllFiles= true;
 	int nbThreads= PreferencesMenu.AVAILABLE_THREADS;
 	String[] IPList;
 
-
-	public GUI(Composite parent, int style) {
+	public GUI(Composite parent, int style) throws BindException {
 		super(parent, style);
 		setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 4, 4));
 		GridLayout gl= (new GridLayout(6, true));
@@ -276,7 +271,7 @@ public class GUI extends Composite  {
 				}
 
 				final Shell prefShell= new Shell(shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-				preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, IPList, prefShell, SWT.NONE);
+				final PreferencesMenu preferences= new PreferencesMenu(fileNames, savedImages, workOnAllFiles, nbThreads, IPList, prefShell, SWT.NONE);
 				prefShell.setText("Preferences");	
 				prefShell.setLayout(new FillLayout());
 				prefShell.setSize(700,400); 
@@ -351,7 +346,7 @@ public class GUI extends Composite  {
 		});
 
 		Button button_1 = new Button(grpAllImages, SWT.NONE);
-		button_1.setText("?\r\n");
+		button_1.setText("?");
 		button_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
 		button_1.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
 		button_1.addSelectionListener(new SelectionAdapter() {
@@ -480,27 +475,12 @@ public class GUI extends Composite  {
 		infoLabel.setEditable(false);
 		print("Ready",true);
 
-		progressBar = new ProgressBar(this, SWT.SMOOTH);
-		progressBar.setMinimum(0);
-		progressBar.setMaximum(100);	
-		GridData gd_progressBar = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-		gd_progressBar.widthHint = 400;
-		gd_progressBar.heightHint = 40;
-		progressBar.setLayoutData(gd_progressBar);	
-		progressBar.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				String string =	progressBar.getSelection() + "%";
-				Point point = progressBar.getSize();
+		Composite composite = new Composite(this, SWT.NONE);
+		composite.setLayout(new FillLayout(SWT.VERTICAL));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
 
-				FontMetrics fontMetrics = e.gc.getFontMetrics();
-				int width = fontMetrics.getAverageCharWidth() * string.length();
-				int height = fontMetrics.getHeight();
-				e.gc.setForeground
-				(shell.getDisplay().getSystemColor(SWT.COLOR_BLACK));
-				e.gc.drawString
-				(string, (point.x-width)/2 , (point.y-height)/2, true);
-			}
-		});
+		globalProgressBar = new PWProgressBar(composite, "overall");
+		localProgressBar = new PWProgressBar(composite, "current");
 
 		zoomLabel= new Text(this, SWT.WRAP);
 		zoomLabel.setEditable(false);
@@ -527,8 +507,12 @@ public class GUI extends Composite  {
 			e1.printStackTrace();
 		}
 
-		server= new Server();
-		server.start();
+		try {
+			server= new Server();
+			server.start();
+		} catch (BindException e1) {
+			throw e1;
+		}
 	}
 
 	/**
@@ -905,8 +889,12 @@ public class GUI extends Composite  {
 		}
 	}
 
-	public void setProgressBarSelection(int selection){
-		progressBar.setSelection(selection);
+	public void setGlobalProgressBarSelection(double selection){
+		globalProgressBar.setProgress(selection);
+	}
+	
+	public void setLocalProgressBarSelection(double selection){
+		localProgressBar.setProgress(selection);
 	}
 
 	public void print(String s, boolean clear){
@@ -938,8 +926,14 @@ public class GUI extends Composite  {
 		display = new Display();
 		shell = new Shell(display,SWT.SHELL_TRIM);
 
-		GUI g=new GUI(shell,SWT.NONE);	
-		shell.setText("Photowork");	
+		GUI g= null;
+		try {
+			g = new GUI(shell,SWT.NONE);
+		} catch (BindException e) {
+			showWarningMessage("One instance of PhotoWork is already running");
+			return;
+		}	
+		shell.setText("PhotoWork");	
 		shell.setLayout(new FillLayout());
 		shell.setSize(1250,700);
 		shell.setMinimumSize(1000,560); 
@@ -958,7 +952,7 @@ public class GUI extends Composite  {
 			}
 		}
 		// disposes all associated windows and their display
-		System.out.println("Photowork closing");
+		System.out.println("PhotoWork closing");
 		server.terminate();
 
 		display.dispose();

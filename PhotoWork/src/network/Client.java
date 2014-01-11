@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 
@@ -30,7 +31,7 @@ public class Client extends Thread{
 	public Client(String ip, Buffer<Task> tasksToDo, Buffer<Result> tasksDone) {
 		this.tasksToDo= tasksToDo;
 		this.tasksDone= tasksDone;	
-		this.ip= ip;	
+		this.ip= ip;
 
 		System.out.println("client "+ip+": client créé");	
 	}
@@ -57,12 +58,19 @@ public class Client extends Thread{
 	}
 
 	private void receiveImage() throws IOException, InterruptedException{
-		BufferedImage output = ImageIO.read(fromServer);
-		fromServer.skip(16); //on saute deux octets qui ne servent à rien
-		int imageNumber = fromServer.readInt();
-
-		tasksDone.put(new Result(output,imageNumber));
+		BufferedImage output; 
+		int imageNumber;
+		double progress;
 		
+		do{
+		output = ImageIO.read(fromServer);
+		fromServer.skip(16); //on saute deux octets qui ne servent à rien
+		imageNumber = fromServer.readInt();
+		progress = fromServer.readDouble();
+		tasksDone.put(new Result(output,imageNumber, progress));
+		}
+        while(progress != 100);
+
 		System.out.println("client "+ip+": image "+(imageNumber+1)+" reçue");
 	}
 

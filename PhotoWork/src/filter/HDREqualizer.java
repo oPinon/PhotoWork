@@ -1,6 +1,10 @@
 package filter;
 
-import display.ProgressBarHandler;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import network.Result;
+import display.PWProgressBar;
 import pImage.PImage;
 import pImage.RGB;
 
@@ -44,7 +48,7 @@ public class HDREqualizer {
 	/*
 	 * Works really great for generating bas-relief from depth-map
 	 */
-	public static PImage filter2(PImage image, int size, ProgressBarHandler progressBar) {
+	public static PImage filter2(PImage image, int size, DataOutputStream toClient) {
 		
 		//long t0 = System.currentTimeMillis();
 		PImage expanded = BlurFilter.expand(image,size);
@@ -53,7 +57,6 @@ public class HDREqualizer {
 		PImage toReturn = new PImage(expanded.width(),expanded.height());
 		
 		int n = (2*size+1)*(2*size+1);
-		progressBar.reset();
 		
 		for(int x = size; x<image.width()+size;x++){
 			for(int y = size; y<image.height()+size;y++) {
@@ -73,7 +76,12 @@ public class HDREqualizer {
 				}
 				toReturn.setCol(x, y, new RGB((R*255)/n,(G*255)/n,(B*255)/n));
 			}
-			progressBar.setProgress((x*100.0)/image.width());
+			
+			try {
+				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		//System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
 		return BlurFilter.cut(toReturn,size);

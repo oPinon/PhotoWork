@@ -9,7 +9,6 @@ import java.net.Socket;
 
 import javax.imageio.ImageIO;
 
-import display.ProgressBarHandler;
 import pImage.ImageSpectrum;
 import pImage.PImage;
 import pImage.Scanner;
@@ -41,6 +40,12 @@ public class ComputationThread extends Thread {
 
 			fromClient = new DataInputStream(socket.getInputStream());
 			toClient = new DataOutputStream(socket.getOutputStream());
+
+			try {
+				Result.sendDataToStream(null, 0, 0, toClient);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 			BufferedImage b= ImageIO.read(fromClient);
 			if(b==null) {													//pour les tests de connection
@@ -79,7 +84,7 @@ public class ComputationThread extends Thread {
 				int blurSize3= fromClient.readInt();
 
 				if(algorithm==0) output= HDREqualizer.filter(input,blurSize3);
-				else output= HDREqualizer.filter2(input,blurSize3, new ProgressBarHandler());
+				else output= HDREqualizer.filter2(input,blurSize3, toClient);
 
 				output= AutoBalance.balanceColors(output);
 
@@ -163,9 +168,7 @@ public class ComputationThread extends Thread {
 			default: 
 				break;
 			}
-
-			ImageIO.write(output.getImage(), "png", toClient);
-			toClient.writeInt(imageNumber);
+			Result.sendDataToStream(output.getImage(), imageNumber, 100, toClient );
 			System.out.println("computationThread: image traitée et renvoyée");
 		} catch (IOException e) {
 			e.printStackTrace();

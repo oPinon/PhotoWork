@@ -74,7 +74,7 @@ public class ImageUpdater extends Thread {
 
 		Display.getDefault().asyncExec(new Runnable() {
 			public void run() {
-				g.setProgressBarSelection(0);
+				g.setGlobalProgressBarSelection(0);
 			}
 		});
 
@@ -90,7 +90,6 @@ public class ImageUpdater extends Thread {
 			imagesToModify[0]= savedImages[count];
 		}
 
-		int tasksLeft= imagesToModify.length;
 		Buffer<Task> tasksToDo= new Buffer<Task>();
 		Buffer<Result> tasksDone= new Buffer<Result>();
 
@@ -100,6 +99,7 @@ public class ImageUpdater extends Thread {
 			clients.add(c);
 			c.start();
 		}
+		int tasksLeft= imagesToModify.length;
 
 		for(Image i: imagesToModify){		
 			ImageData id= i.getImageData();
@@ -177,7 +177,7 @@ public class ImageUpdater extends Thread {
 			count++;
 		}
 
-		while(tasksLeft>0){
+		while(tasksLeft != 0){
 			Result r;
 			try {
 				r = tasksDone.take();
@@ -185,21 +185,36 @@ public class ImageUpdater extends Thread {
 				e.printStackTrace();
 				return;
 			}
-			BufferedImage output= new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
-			final int number= r.getImageNumber();
 
+			final double progress= r.getProgress();
 
-			final Image i= new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
+			if(progress==100){
+				BufferedImage output= new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
+				final int number= r.getImageNumber();
 
-			tasksLeft--;
-			final int remaining= tasksLeft;
+				final Image i= new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
+				
+				tasksLeft--;
+				final int remaining= tasksLeft;
 
-			Display.getDefault().asyncExec(new Runnable() {
-				public void run() {
-					g.updateImage(i, number, selectedFunction);
-					g.setProgressBarSelection(100-(remaining*100/imagesToModify.length));
-				}
-			});		
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						g.updateImage(i, number, selectedFunction);
+						g.setGlobalProgressBarSelection(100-(remaining*100/imagesToModify.length));
+						g.setLocalProgressBarSelection(100);
+					}
+				});	
+				
+	
+			}
+			else{
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						g.setLocalProgressBarSelection(progress);
+					}
+				});	
+			}
+
 		}
 
 		for(Client c: clients) c.interrupt();

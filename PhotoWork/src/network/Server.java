@@ -1,6 +1,7 @@
 package network;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ServerSocket;
 
 /**
@@ -13,11 +14,14 @@ public class Server extends Thread{
 
 	private static ServerSocket socket;
 
-	public Server() {
+	public Server() throws BindException {
 		try {
 			socket = new ServerSocket(6789);
 			System.out.println("serveur: création sur cet ordinateur");
-		} catch (IOException e) {
+		} catch (BindException e) {
+			throw e;
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
