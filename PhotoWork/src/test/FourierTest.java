@@ -54,7 +54,7 @@ public class FourierTest {
 		
 		new gAPainter.Display(toReturn);
 		
-		//ImageIO.write(result.getImage(), "png", new File("result.png"));
+		//ImageIO.write(calculated.getImage(), "png", new File("calculated.png"));
 	}
 
 }

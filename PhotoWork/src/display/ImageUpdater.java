@@ -33,40 +33,30 @@ public class ImageUpdater extends Thread {
 	private String[] IPList;
 	private int nbThreads;
 
-	private int autoBalanceType;
-	private int blurSize;
-	private int HDRAlgorithm;
+	private int autoBalanceType, blurSize, HDRAlgorithm;
 
-	private int DFTMode;
-	private int scaleMethod;
-	private int cutFrequency;
+	private int DFTMode, scaleMethod, cutFrequency;
 
-	private int[] scanPointsX;
-	private int[] scanPointsY;
+	private int[] scanPointsX, scanPointsY;
 	private int scanFormat;
 
-	ImageUpdater(GUI g, ImageFunction selectedFunction, boolean workOnAllFiles,
-			Image[] savedImages, int selectedImageNumber, String[] iPList,
-			int nbThreads, int autoBalanceType, int blurSize, int hDRAlgorithm,
-			int dFTMode, int scaleMethod, int cutFrequency, int[] scanPointsX,
-			int[] scanPointsY, int scanFormat) {
-		super();
+	public ImageUpdater(GUI g) {
 		this.g = g;
-		this.selectedFunction = selectedFunction;
-		this.workOnAllFiles = workOnAllFiles;
-		this.savedImages = savedImages;
-		this.selectedImageNumber = selectedImageNumber;
-		IPList = iPList;
-		this.nbThreads = nbThreads;
-		this.autoBalanceType = autoBalanceType;
-		this.blurSize = blurSize;
-		HDRAlgorithm = hDRAlgorithm;
-		DFTMode = dFTMode;
-		this.scaleMethod = scaleMethod;
-		this.cutFrequency = cutFrequency;
-		this.scanPointsX = scanPointsX;
-		this.scanPointsY = scanPointsY;
-		this.scanFormat = scanFormat;
+		selectedFunction = g.selectedFunction;
+		workOnAllFiles = g.workOnAllFiles;
+		savedImages = g.savedImages;
+		selectedImageNumber = g.selectedImageNumber;
+		IPList = g.IPList;
+		nbThreads = g.nbThreads;
+		autoBalanceType = g.autoBalanceType;
+		blurSize = g.blurSize;
+		HDRAlgorithm = g.HDRAlgorithm;
+		DFTMode = g.DFTMode;
+		scaleMethod = g.scaleMethod;
+		cutFrequency = g.cutFrequency;
+		scanPointsX = g.scanPointsX;
+		scanPointsY = g.scanPointsY;
+		scanFormat = g.scanFormat;
 	}
 
 	public void run(){
@@ -81,29 +71,29 @@ public class ImageUpdater extends Thread {
 		final Image[] imagesToModify;
 		int count;	
 		if((selectedFunction.isApplicableOnAllFiles()) && workOnAllFiles){
-			imagesToModify= savedImages;
-			count= 0;
+			imagesToModify = savedImages;
+			count = 0;
 		}
 		else{
-			imagesToModify= new Image[1];
-			count= selectedImageNumber;
-			imagesToModify[0]= savedImages[count];
+			imagesToModify = new Image[1];
+			count = selectedImageNumber;
+			imagesToModify[0] = savedImages[count];
 		}
 
-		Buffer<Task> tasksToDo= new Buffer<Task>();
-		Buffer<Result> tasksDone= new Buffer<Result>();
+		Buffer<Task> tasksToDo = new Buffer<Task>();
+		Buffer<Result> tasksDone = new Buffer<Result>();
 
-		List<Client> clients= new ArrayList<Client>();
+		List<Client> clients = new ArrayList<Client>();
 		for(String s: IPList){
-			Client c= new Client(s, tasksToDo, tasksDone);
+			Client c = new Client(s, tasksToDo, tasksDone);
 			clients.add(c);
 			c.start();
 		}
-		int tasksLeft= imagesToModify.length;
+		int tasksLeft = imagesToModify.length;
 
 		for(Image i: imagesToModify){		
-			ImageData id= i.getImageData();
-			BufferedImage input= FormatConversion.convertToAWT(id);
+			ImageData id = i.getImageData();
+			BufferedImage input = FormatConversion.convertToAWT(id);
 
 			Task task = null;
 
@@ -131,39 +121,9 @@ public class ImageUpdater extends Thread {
 				break;
 
 			case GA_PAINTER:	
-				//			final Painter p= new Painter(FormatConversion.convertToAWT(id));		
-				//			p.start();
-				//
-				//
-				//			final Timer t = new Timer();
-				//			t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
-				//				GC GAgc=null;	
-				//				if(p.output!=null){
-				//					final Image output= new Image(display,savedImages[selectedImageNumber].getBounds().width*2,savedImages[selectedImageNumber].getBounds().height);
-				//
-				//					if(GAgc==null || GAgc.isDisposed()){
-				//						GAgc= new GC(output);
-				//					}
-				//					GAgc.drawImage(savedImages[selectedImageNumber],0, 0);
-				//					GAgc.drawImage(new Image(display,FormatConversion.convertToSWT(p.output)),savedImages[selectedImageNumber].getBounds().width, 0);
-				//					GAgc.dispose();			
-				//					Display.getDefault().asyncExec(new Runnable() {
-				//						public void run() {
-				//							resizeImage(output);
-				//						}
-				//					});
-				//				}
-				//			}}
-				//			,0,1000l);
-				//
-				//			btnStop.addSelectionListener(new SelectionAdapter() {
-				//				@Override
-				//				public void widgetSelected(SelectionEvent arg0) {
-				//					t.cancel();
-				//					p.interrupt();
-				//				}
-				//			});
+				task= new Task(input, selectedFunction, count, new int[]{});
 				break;
+				
 			default:
 				break;	
 			}
@@ -182,20 +142,19 @@ public class ImageUpdater extends Thread {
 			try {
 				r = tasksDone.take();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				for(Client c: clients) c.interrupt();
 				return;
 			}
 
-			final double progress= r.getProgress();
+			final BufferedImage output = new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
+			final int number = r.getImageNumber();
+			final double progress = r.getProgress();
 
-			if(progress==100){
-				BufferedImage output= new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
-				final int number= r.getImageNumber();
+			if(progress == 100){
+				final Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
 
-				final Image i= new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
-				
 				tasksLeft--;
-				final int remaining= tasksLeft;
+				final int remaining = tasksLeft;
 
 				Display.getDefault().asyncExec(new Runnable() {
 					public void run() {
@@ -204,12 +163,15 @@ public class ImageUpdater extends Thread {
 						g.setLocalProgressBarSelection(100);
 					}
 				});	
-				
-	
-			}
-			else{
+
+			} else{
 				Display.getDefault().asyncExec(new Runnable() {
-					public void run() {
+					public void run() {	
+						if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entièrement traitées
+							Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
+							g.updateImage(i, number, selectedFunction);
+							g.refreshDisplay();
+						}
 						g.setLocalProgressBarSelection(progress);
 					}
 				});	
@@ -219,13 +181,13 @@ public class ImageUpdater extends Thread {
 
 		for(Client c: clients) c.interrupt();
 
-		final long t2= System.currentTimeMillis();
+		final long t2 = System.currentTimeMillis();
 
 		Display.getDefault().asyncExec(new Runnable() {
 			public void run() {
 				g.print("\n"+selectedFunction.getName()+" finished",false);
 				g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
-				if(selectedFunction==ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux traitements à la suite
+				if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux traitements à la suite
 				g.refreshDisplay();
 			}
 		});	

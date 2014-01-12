@@ -10,18 +10,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.ScrollBar;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Text;
 
 /**
@@ -31,13 +29,11 @@ import org.eclipse.swt.widgets.Text;
  *
  */
 public class PreferencesMenu extends Composite {
-	public static final int AVAILABLE_THREADS= Runtime.getRuntime().availableProcessors();
-
-	Composite parent;
+	static final int AVAILABLE_THREADS= Runtime.getRuntime().availableProcessors();
+	GUI g;
 
 	List fileList, serverList;
 	Spinner threadsSpinner;	
-	
 	Button btnRemoveServer;
 
 	boolean workOnAllFiles;
@@ -50,9 +46,8 @@ public class PreferencesMenu extends Composite {
 	 * @param parent
 	 * @param style
 	 */
-	PreferencesMenu(String[] fileNames, Image[] savedImages, boolean workOnEveryFiles, int nbThreads, String[] IPList, final Composite parent, int style) {
+	public PreferencesMenu(GUI g, Composite parent, int style) {
 		super(parent, style);
-		this.parent= parent;
 		setLayout(new GridLayout(2, false));
 
 		Group grpNetwork = new Group(this, SWT.NONE);
@@ -70,7 +65,7 @@ public class PreferencesMenu extends Composite {
 			}
 			public void widgetDefaultSelected(SelectionEvent arg0) {}
 		});		
-		IPs= IPList;
+		IPs= g.IPList;
 		for(String s: IPs){
 			serverList.add(s);
 		}
@@ -137,7 +132,7 @@ public class PreferencesMenu extends Composite {
 		sizes.setEnabled(false);
 
 		final Button btnCheckButton = new Button(grpFilesToWork, SWT.CHECK);
-		workOnAllFiles= workOnEveryFiles;
+		workOnAllFiles= g.workOnAllFiles;
 		btnCheckButton.setSelection(workOnAllFiles);
 		btnCheckButton.setText("Work on all files");
 
@@ -154,15 +149,15 @@ public class PreferencesMenu extends Composite {
 
 		threadsSpinner = new Spinner(grpNumberOfThreads, SWT.BORDER);
 		threadsSpinner.setMinimum(1);
-		threads = nbThreads;
+		threads = g.nbThreads;
 		threadsSpinner.setSelection(threads);
 
 		final ScrollBar vBar2 = sizes.getVerticalBar();
 		final ScrollBar vBar1 = fileList.getVerticalBar();
 
-		for(int i=0; i<fileNames.length; i++){
-			fileList.add(fileNames[i].substring(fileNames[i].lastIndexOf('/') + 1));
-			sizes.add(savedImages[i].getBounds().width+"*"+savedImages[i].getBounds().height);
+		for(int i=0; i<g.fileNames.length; i++){
+			fileList.add(g.fileNames[i].substring(g.fileNames[i].lastIndexOf('/') + 1));
+			sizes.add(g.savedImages[i].getBounds().width+"*"+g.savedImages[i].getBounds().height);
 		}
 
 		SelectionListener listener = new SelectionAdapter() {
@@ -220,4 +215,5 @@ public class PreferencesMenu extends Composite {
 	protected void checkSubclass() {
 		// Disable the check that prevents subclassing of SWT display
 	}
+
 }

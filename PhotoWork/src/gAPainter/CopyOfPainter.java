@@ -1,7 +1,5 @@
 package gAPainter;
 
-import java.awt.Graphics;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
@@ -10,47 +8,51 @@ import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
-public class Painter extends Thread{
+public class CopyOfPainter {
 
 	/**
 	 * @param args
 	 * @throws IOException 
 	 */
-	private BufferedImage output;
-	private BufferedImage input;
-	
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated method stub
+		int scale = 1;
+		
+		BufferedImage source = ImageIO.read( new File("mutation.png"));
+		BufferedImage sourceHQ = new BufferedImage(source.getWidth()*scale,source.getHeight()*scale,BufferedImage.TYPE_INT_RGB);
+		java.awt.Graphics g = sourceHQ.getGraphics();
+		g.drawImage(source, 0, 0, source.getWidth()*scale, source.getHeight()*scale, null);
+		
+		CopyOfPainter p = new CopyOfPainter(source);
+		
+		Display d = new Display(sourceHQ);
+		int i=0;
+		long t = System.currentTimeMillis();
+		
+		while(true) {
+			p.mutate();
+			//ImageIO.write(p.getBest(1), "png", new File("render.png"));
+			i++;
+			if(i%100==0) {
+				d.setImage(p.getBest(scale));
+				System.out.println("fitness = "+p.bestFitness()+
+					"; time = "+((System.currentTimeMillis()-t)/1000)); }
+		}
+	}
+
+	private BufferedImage source;
 	static int triPop = 100;
 	static int cirPop = 100;
 	private int width, height, pop = 5, birthFac = 10;
 	private Sketch s;
 	private int fitness;
 
-	public Painter(BufferedImage source) {
-		this.input = source;
+	public CopyOfPainter(BufferedImage source) {
+		this.source = source;
 		this.width = source.getWidth(); this.height = source.getHeight();
 
 		s = new Sketch(width,height,triPop,cirPop);
 		fitness = getDiff(s.getIm());
-	}
-
-	public void run() {
-		int scale = 1;
-
-		output = new BufferedImage(input.getWidth()*2,input.getHeight(),BufferedImage.TYPE_INT_RGB);
-
-		int i=0;
-		long t = System.currentTimeMillis();
-
-		while(!isInterrupted()) {
-			mutate();
-			i++;
-			if(i%100==0) {
-				setOutput(getBest(scale));	
-				
-				Toolkit.getDefaultToolkit().sync();
-				System.out.println("fitness = "+bestFitness()+
-						"; time = "+((System.currentTimeMillis()-t)/1000)); }
-		}
 	}
 
 	public void mutate() {
@@ -69,13 +71,13 @@ public class Painter extends Thread{
 	}
 
 	public int bestFitness() {
-		return fitness/input.getWidth()/input.getHeight();
+		return fitness/source.getWidth()/source.getHeight();
 	}
 
 	private int getDiff(BufferedImage img) {
 
 		int diff=0;
-		WritableRaster raster1 = input.getRaster();
+		WritableRaster raster1 = source.getRaster();
 		WritableRaster raster2 = img.getRaster();
 		for(int x=0;x<width;x++) {
 			for(int y=0;y<height;y++) {
@@ -92,22 +94,6 @@ public class Painter extends Thread{
 		}
 		if(diff<0) { diff = Integer.MAX_VALUE; }
 		return diff;
-	}
-
-	/**
-	 * @return the output
-	 */
-	public synchronized BufferedImage getOutput() {
-		return output;
-	}
-
-	/**
-	 * @param output the output to set
-	 */
-	private synchronized void setOutput(BufferedImage calculated) {
-		Graphics g = output.getGraphics();
-		g.drawImage(input,0,0,null);
-		g.drawImage(calculated,input.getWidth(),0,null);
 	}
 
 }

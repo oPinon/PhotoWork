@@ -6,6 +6,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
 
@@ -16,6 +18,7 @@ import filter.AutoBalance;
 import filter.BlurFilter;
 import filter.HDREqualizer;
 import filter.ImageFunction;
+import gAPainter.Painter;
 
 /**
  * Réalise le traitement d'une image.
@@ -33,8 +36,9 @@ public class ComputationThread extends Thread {
 
 	@Override
 	public void run() {
-		DataInputStream fromClient;
-		DataOutputStream toClient;
+		final DataInputStream fromClient;
+		final DataOutputStream toClient;
+		
 		try {
 			System.out.println("computationThread: prêt à traiter");
 
@@ -47,7 +51,7 @@ public class ComputationThread extends Thread {
 				e.printStackTrace();
 			}
 
-			BufferedImage b= ImageIO.read(fromClient);
+			final BufferedImage b= ImageIO.read(fromClient);
 			if(b==null) {													//pour les tests de connection
 				System.out.println("computationThread: test connection OK");
 				return; 
@@ -58,7 +62,7 @@ public class ComputationThread extends Thread {
 			fromClient.skip(16); //on saute deux octets qui ne servent à rien
 
 			ImageFunction function= ImageFunction.fromName(fromClient.readUTF());
-			int imageNumber= fromClient.readInt();	
+			final int imageNumber= fromClient.readInt();	
 
 			switch(function){
 			case AUTO_BALANCE:
@@ -130,40 +134,23 @@ public class ComputationThread extends Thread {
 				break;
 
 			case GA_PAINTER:	
-				//			ImageData id= savedImages[selectedImageNumber].getImageData();
-				//			final Painter p= new Painter(FormatConversion.convertToAWT(id));		
-				//			p.start();
-				//
-				//
-				//			final Timer t = new Timer();
-				//			t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
-				//				GC GAgc=null;	
-				//				if(p.output!=null){
-				//					final Image output= new Image(display,savedImages[selectedImageNumber].getBounds().width*2,savedImages[selectedImageNumber].getBounds().height);
-				//
-				//					if(GAgc==null || GAgc.isDisposed()){
-				//						GAgc= new GC(output);
-				//					}
-				//					GAgc.drawImage(savedImages[selectedImageNumber],0, 0);
-				//					GAgc.drawImage(new Image(display,FormatConversion.convertToSWT(p.output)),savedImages[selectedImageNumber].getBounds().width, 0);
-				//					GAgc.dispose();			
-				//					Display.getDefault().asyncExec(new Runnable() {
-				//						public void run() {
-				//							resizeImage(output);
-				//						}
-				//					});
-				//				}
-				//			}}
-				//			,0,1000l);
-				//
-				//			btnStop.addSelectionListener(new SelectionAdapter() {
-				//				@Override
-				//				public void widgetSelected(SelectionEvent arg0) {
-				//					t.cancel();
-				//					p.interrupt();
-				//				}
-				//			});
-				break;
+				final Painter p= new Painter(b);		
+				p.start();
+
+				final Timer t = new Timer();
+				t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
+					if(p.getOutput()!=null){
+						try {
+							Result.sendDataToStream(p.getOutput(), imageNumber, 0, toClient);
+						} catch (IOException e) {
+							cancel();
+							p.interrupt();
+						}
+					}
+				}}
+				,0,1000l);
+
+				return;
 
 			default: 
 				break;

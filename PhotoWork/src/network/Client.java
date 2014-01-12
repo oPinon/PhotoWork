@@ -67,7 +67,7 @@ public class Client extends Thread{
 		fromServer.skip(16); //on saute deux octets qui ne servent à rien
 		imageNumber = fromServer.readInt();
 		progress = fromServer.readDouble();
-		tasksDone.put(new Result(output,imageNumber, progress));
+		tasksDone.put(new Result(output, imageNumber, progress));
 		}
         while(progress != 100);
 
