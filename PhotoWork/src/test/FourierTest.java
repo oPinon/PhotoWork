@@ -4,8 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
 import pImage.*;
-import filter.*;
 
 import javax.imageio.ImageIO;
 
@@ -24,7 +24,7 @@ public class FourierTest {
 		PImage img = new PImage(source);
 		System.out.println("image converted to PImage");
 		//does a Fourier Transform to create the image's spectrum
-		ImageSpectrum spectrum = new ImageSpectrum(img);
+		ImageSpectrum spectrum = new ImageSpectrum(img, null);
 		System.out.println("spectrum computed");
 		//converts it back to image with reverse Fourier Transform
 		
@@ -43,7 +43,7 @@ public class FourierTest {
 		}
 		
 		PImage result = spectrum.getReverseTransform();
-		result = filter.AutoBalance.balanceColors(result);
+		result = filter.AutoBalance.balanceColors(result, null);
 
 		System.out.println("reverse transform done");
 		

@@ -16,11 +16,11 @@ public class HDRTest {
 
 		PImage source = new PImage(originalSource);
 		
-		PImage toReturn = filter.HDREqualizer.filter(source, 50);
+		PImage toReturn = filter.HDREqualizer.filter2(source, 50, null);
 		
-		toReturn = filter.AutoBalance.balanceColors(toReturn);
+		toReturn = filter.AutoBalance.balanceColors(toReturn, null);
 		
-		originalSource = filter.AutoBalance.balanceColors(new pImage.PImage(originalSource)).getImage();
+		originalSource = filter.AutoBalance.balanceColors(new pImage.PImage(originalSource), null).getImage();
 		
 		new gAPainter.Display(originalSource).setImage(toReturn.getImage());
 	}

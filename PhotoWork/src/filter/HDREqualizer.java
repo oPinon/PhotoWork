@@ -4,7 +4,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import network.Result;
-import display.PWProgressBar;
 import pImage.PImage;
 import pImage.RGB;
 
@@ -13,7 +12,7 @@ public class HDREqualizer {
 	/*
 	 *  uses Algo : http://en.wikipedia.org/wiki/Adaptive_histogram_equalization
 	 */
-	public static PImage filter(PImage image, int size) {
+	public static PImage filter(PImage image, int size, DataOutputStream toClient) {
 		//long t0 = System.currentTimeMillis();
 		PImage expanded = BlurFilter.expand(image,size);
 		//System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
@@ -39,6 +38,12 @@ public class HDREqualizer {
 					}
 				}
 				toReturn.setCol(x, y, new RGB((R)/n,(G)/n,(B)/n));
+			}
+			
+			try {
+				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		//System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");

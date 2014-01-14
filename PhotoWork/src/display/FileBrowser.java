@@ -64,7 +64,7 @@ public class FileBrowser {
 		dialog.setFilterNames(new String[] { "PNG", "JPEG", "GIF", "All Files (*.*)" });
 		dialog.setFilterExtensions(new String[] { "*.png", "*.jpeg", "*.gif", "*.*" }); 
 
-		dialog.setFileName("calculated");
+		dialog.setFileName("result");
 
 		String path = dialog.open();
 		chosenFiles= new String[]{path};

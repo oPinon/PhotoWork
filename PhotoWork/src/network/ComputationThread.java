@@ -38,66 +38,61 @@ public class ComputationThread extends Thread {
 	public void run() {
 		final DataInputStream fromClient;
 		final DataOutputStream toClient;
-		
+
 		try {
-			System.out.println("computationThread: prêt à traiter");
+			System.out.println("computationThread: pret a traiter");
 
 			fromClient = new DataInputStream(socket.getInputStream());
 			toClient = new DataOutputStream(socket.getOutputStream());
 
-			try {
-				Result.sendDataToStream(null, 0, 0, toClient);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			final BufferedImage b= ImageIO.read(fromClient);
-			if(b==null) {													//pour les tests de connection
+			final BufferedImage b = ImageIO.read(fromClient);
+			if(b == null) {										//pour les tests de connection du menu Preferences
 				System.out.println("computationThread: test connection OK");
 				return; 
 			}
-			PImage input= new PImage(b);
+			PImage input = new PImage(b);
 
+			Result.sendDataToStream(null, 0, 0, toClient);
 			PImage output= new PImage(0,0);	
-			fromClient.skip(16); //on saute deux octets qui ne servent à rien
+			fromClient.skip(16); //on saute deux octets a la fin de l'image, dus au format png
 
-			ImageFunction function= ImageFunction.fromName(fromClient.readUTF());
-			final int imageNumber= fromClient.readInt();	
+			ImageFunction function = ImageFunction.fromName(fromClient.readUTF());
+			final int imageNumber = fromClient.readInt();	
 
 			switch(function){
 			case AUTO_BALANCE:
-				int nbThreads= fromClient.readInt();
-				int type= fromClient.readInt();
-				int blurSize= fromClient.readInt();
+				int nbThreads = fromClient.readInt();
+				int type = fromClient.readInt();
+				int blurSize = fromClient.readInt();
 
 				switch(type){
-				case 0: output= AutoBalance.balance(input, nbThreads);     break;
-				case 1: output= AutoBalance.balanceColors(input);		   break;	
-				case 2: output= AutoBalance.balanceColors(input,blurSize); break;
+				case 0: output = AutoBalance.balance(input, nbThreads, toClient);     break;
+				case 1: output = AutoBalance.balanceColors(input, toClient);		   break;	
+				case 2: output = AutoBalance.balanceColors(input,blurSize, toClient); break;
 				}
 				break;
 
 			case BLUR:
-				int blurSize2= fromClient.readInt();
+				int blurSize2 = fromClient.readInt();
 
-				output= BlurFilter.blur(input,blurSize2);
+				output= BlurFilter.blur(input, blurSize2, toClient);
 				break;
 
 			case HDR_EQUALIZER:
-				int algorithm= fromClient.readInt();
-				int blurSize3= fromClient.readInt();
+				int algorithm = fromClient.readInt();
+				int blurSize3 = fromClient.readInt();
 
-				if(algorithm==0) output= HDREqualizer.filter(input,blurSize3);
-				else output= HDREqualizer.filter2(input,blurSize3, toClient);
+				if(algorithm == 0) output= HDREqualizer.filter(input, blurSize3, toClient);
+				else output= HDREqualizer.filter2(input, blurSize3, toClient);
 
-				output= AutoBalance.balanceColors(output);
+				output= AutoBalance.balanceColors(output, null);
 
 				break;
 
 			case FOURIER_TRANSFORM:
-				int isHighPassFilterOn= fromClient.readInt();
-				int isScalingLog= fromClient.readInt();
-				int cutFrequency= fromClient.readInt();
+				int isHighPassFilterOn = fromClient.readInt();
+				int isScalingLog = fromClient.readInt();
+				int cutFrequency = fromClient.readInt();
 
 				BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
 				Graphics2D g = source.createGraphics();
@@ -108,47 +103,50 @@ public class ComputationThread extends Thread {
 				PImage img = new PImage(source);
 				System.out.println("image converted to PImage");
 				//does a Fourier Transform to create the image's spectrum
-				ImageSpectrum spectrum = new ImageSpectrum(img);
+				ImageSpectrum spectrum = new ImageSpectrum(img, toClient);
 				System.out.println("spectrum computed");
 
-				if(isHighPassFilterOn==0){
-					output= spectrum.getTransform(isScalingLog==1);
+				if(isHighPassFilterOn == 0){
+					output = spectrum.getTransform(isScalingLog==1);
 				} else{	
-					spectrum.highPassFilter(cutFrequency); // the width of the part we remove in the spectrum
+					spectrum.highPassFilter(cutFrequency);
 
 					PImage result = spectrum.getReverseTransform();
-					output = filter.AutoBalance.balanceColors(result);
+					output = filter.AutoBalance.balanceColors(result, null);
 
 					System.out.println("reverse transform done");
 				}
 				break;
 
 			case SCAN:
-				int nbThreads2= fromClient.readInt();
-				int[] scanPointsX= {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
-				int[] scanPointsY= {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
-				int formatIndex= fromClient.readInt();
+				int nbThreads2 = fromClient.readInt();
+				int[] scanPointsX = {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
+				int[] scanPointsY = {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
+				int formatIndex = fromClient.readInt();
 
-				output= Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2);
+				output= Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, toClient);
 
 				break;
 
 			case GA_PAINTER:	
-				final Painter p= new Painter(b);		
+				int triPop = fromClient.readInt();
+				int cirPop = fromClient.readInt();
+
+				final Painter p = new Painter(b,triPop,cirPop);		
 				p.start();
 
 				final Timer t = new Timer();
 				t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
-					if(p.getOutput()!=null){
+					if(p.getOutput() != null){
 						try {
-							Result.sendDataToStream(p.getOutput(), imageNumber, 0, toClient);
+							Result.sendDataToStream(p.getOutput(), imageNumber, p.getProgress(), toClient);
 						} catch (IOException e) {
 							cancel();
 							p.interrupt();
 						}
 					}
 				}}
-				,0,1000l);
+				,0,1000l); //envoi de l'image toutes les secondes
 
 				return;
 
@@ -156,7 +154,7 @@ public class ComputationThread extends Thread {
 				break;
 			}
 			Result.sendDataToStream(output.getImage(), imageNumber, 100, toClient );
-			System.out.println("computationThread: image traitée et renvoyée");
+			System.out.println("computationThread: image traitee et renvoyee");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -1,17 +1,21 @@
 package pImage;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import network.Result;
 import filter.AutoBalance;
 
 public class Scanner{
 
-	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads) {
+	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads, DataOutputStream toClient) {
 		long t0 = System.currentTimeMillis();
 
 		int outputHeight;
 		int outputWidth;
 
 		switch(format){
-		case 0: outputHeight= 841 ; outputWidth= 1189 ;break; //d�sactiv� car erreur java outofmemory
+		case 0: outputHeight= 841 ; outputWidth= 1189 ;break;
 		case 1: outputHeight= 594 ; outputWidth=  841 ;break;
 		case 2: outputHeight= 420 ; outputWidth=  594 ;break;
 		case 3: outputHeight= 297 ; outputWidth=  420 ;break;
@@ -21,16 +25,16 @@ public class Scanner{
 		default: outputHeight= 210 ; outputWidth= 297 ;
 		}
 
-		PImage transformed = Scanner.transform(input,x,y,outputHeight*4,outputWidth*4);
+		PImage transformed = Scanner.transform(input,x,y,outputHeight*4,outputWidth*4, toClient);
 
-		transformed = AutoBalance.balance(transformed,nbThreads);
+		transformed = AutoBalance.balance(transformed, nbThreads, null);
 
 		System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
 		return transformed;
 
 	}
 
-	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height) { // x and y are int[4] and M1 M2 M4 M3 are clockwise points
+	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height, DataOutputStream toClient) { // x and y are int[4] and M1 M2 M4 M3 are clockwise points
 		double x1 = x5[0]; double x2 = x5[1]; double x3 = x5[2]; double x4 = x5[3];
 		double y1 = y5[0]; double y2 = y5[1]; double y3 = y5[2]; double y4 = y5[3];
 
@@ -51,6 +55,11 @@ public class Scanner{
 				double X = Ax*i*j + Bx*i + Cx*j + Dx;
 				double Y = Ay*i*j + By*i + Cy*j + Dy;
 				toReturn.setCol(i, j, bilinear(img,X,Y));
+			}
+			try {
+				Result.sendDataToStream(null, 0, Math.min( (i*100.0)/img.width() , 99.99), toClient );
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return toReturn;

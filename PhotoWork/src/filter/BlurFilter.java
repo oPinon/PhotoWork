@@ -1,15 +1,19 @@
 package filter;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import network.Result;
 import pImage.PImage;
 import pImage.RGB;
 
 public class BlurFilter {
 
-	public static PImage blur(PImage image, int blurSize) {
-			long t0 = System.currentTimeMillis();
+	public static PImage blur(PImage image, int blurSize, DataOutputStream toClient) {
+		long t0 = System.currentTimeMillis();
 		PImage expanded = expand(image,blurSize);
-			System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
-			t0 = System.currentTimeMillis();
+		System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
+		t0 = System.currentTimeMillis();
 		PImage blurred = new PImage(expanded.width(),expanded.height());
 		int n = (2*blurSize+1)*(2*blurSize+1);
 		for(int x = blurSize; x<image.width()+blurSize;x++){
@@ -25,8 +29,13 @@ public class BlurFilter {
 				}
 				blurred.setCol(x, y, new RGB(R/n,G/n,B/n));
 			}
+			try {
+				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-			System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
+		System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
 		return cut(blurred,blurSize);
 	}
 

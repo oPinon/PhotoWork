@@ -1,5 +1,10 @@
 package pImage;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import network.Result;
+
 public class ImageSpectrum {
 
 	private Spectrum RSpectrum;
@@ -7,7 +12,7 @@ public class ImageSpectrum {
 	private Spectrum BSpectrum;
 	private int width, height;
 
-	public ImageSpectrum(PImage source) {
+	public ImageSpectrum(PImage source, DataOutputStream toClient) {
 		this.width=source.width(); this.height=source.height();
 		RSpectrum = new Spectrum(width,height);
 		GSpectrum = new Spectrum(width,height);
@@ -30,6 +35,11 @@ public class ImageSpectrum {
 				RSpectrum.setComplex(fx, fy, R);
 				GSpectrum.setComplex(fx, fy, G);
 				BSpectrum.setComplex(fx, fy, B);
+			}
+			try {
+				Result.sendDataToStream(null, 0, Math.min( (fx*100.0)/source.width() , 99.99), toClient );
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}

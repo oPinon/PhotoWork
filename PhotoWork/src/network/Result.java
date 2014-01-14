@@ -7,7 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * Représente le résultat d'un traitement en cours ou fini: image traitée et son numéro.
+ * Represente le resultat d'un traitement en cours ou fini: image traitee et son numero.
  * 
  * @author Pierre-Alexandre Durand
  *   
@@ -36,8 +36,18 @@ public class Result {
 		return progress;
 	}
 
+	/**
+	 * Envoie les donnees d'un Result dans un outputStream.
+	 * 
+	 * @param result
+	 * @param imageNumber
+	 * @param progress
+	 * @param toClient S'il vaut null, la methode quitte immediatement sans rien faire
+	 * @throws IOException
+	 */
 	public static void sendDataToStream(BufferedImage result, int imageNumber, double progress, DataOutputStream toClient) throws IOException{
-		if(result==null) ImageIO.write(VOID, "png", toClient);
+		if(toClient == null) return;
+		if(result == null) ImageIO.write(VOID, "png", toClient);
 		else ImageIO.write(result, "png", toClient);
 		toClient.writeInt(imageNumber);
 		toClient.writeDouble(progress);

@@ -53,7 +53,7 @@ public class GUI extends Composite  {
 
 	//RESEAU
 	private static ImageUpdater updater;
-	private static Server server; //traite les taches envoyées par les PC
+	private static Server server; //traite les taches envoyees par les PC
 
 	//AFFICHAGE GRAPHIQUE
 	//Barre d'options
@@ -63,7 +63,7 @@ public class GUI extends Composite  {
 	//Zone d'affichage d'image
 	private Composite imageFrame;
 	private double zoomRatio = 1;
-	private Image image; //image redimensionnée pour l'affichage
+	private Image image; //image redimensionnee pour l'affichage
 	private GC gc;	//Dessins sur l'affichage d'image
 
 	//Zones d'affichage d'informations
@@ -72,7 +72,7 @@ public class GUI extends Composite  {
 
 	//Boutons particuliers
 	private Button btnApply;
-	private Button btnStop;	//GA Painter
+	Button btnStop;	//GA Painter
 
 	//Barres de progression
 	private PWProgressBar globalProgressBar;
@@ -80,19 +80,19 @@ public class GUI extends Composite  {
 
 
 	//PARAMETRES
-	//Données sur l'affichage d'image
+	//Donnees sur l'affichage d'image
 	int selectedImageNumber;
 	Image[] savedImages; //Images telles qu'elles sont actuellement (taille normale)
-	Image[] originalImages; //Images telles qu'elles étaient lors du chargement
+	Image[] originalImages; //Images telles qu'elles etaient lors du chargement
 
-	//Nom des fichiers chargés
+	//Nom des fichiers charges
 	String[] fileNames;
 
-	//Nom de la fonction sélectionnée
+	//Nom de la fonction selectionnee
 	ImageFunction selectedFunction;
 
 	//Fonctions de filtre (Auto Balance, Blur, HDR)
-	int autoBalanceType, blurSize, HDRAlgorithm; //Type d'autobalance: 0:simple, 1:équilibrage couleurs, 2: équilibrage avec flou
+	int autoBalanceType, blurSize, HDRAlgorithm; //Type d'autobalance: 0:simple, 1:equilibrage couleurs, 2: equilibrage avec flou
 
 	//DFT
 	int DFTMode, scaleMethod, cutFrequency;
@@ -101,11 +101,16 @@ public class GUI extends Composite  {
 	int[] scanPointsX = new int[4];
 	int[] scanPointsY = new int[4];
 	int scanFormat;
+	
+	//GA Painter
+	int nbTriangles;
+	int nbCircles;
 
-	//Définis avec le menu Préférences
+	//Definis avec le menu Preferences
 	boolean workOnAllFiles = true;
 	int nbThreads = PreferencesMenu.AVAILABLE_THREADS;
 	String[] IPList;
+
 
 	public GUI(Composite parent, int style) throws BindException {
 		super(parent, style);
@@ -126,7 +131,7 @@ public class GUI extends Composite  {
 		titleLabel.setText("No image selected");
 
 		Button btnRefresh = new Button(compositeTitle, SWT.NONE);
-		btnRefresh.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnRefresh.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
 		btnRefresh.setImage(new Image(display,"images/refresh.png"));
 		btnRefresh.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
@@ -289,7 +294,7 @@ public class GUI extends Composite  {
 		Button btnABHelp = new Button(grpAllImages, SWT.NONE);
 		btnABHelp.setText("?");
 		btnABHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));	
-		btnABHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnABHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnABHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/autoBalance.png"));
@@ -311,7 +316,7 @@ public class GUI extends Composite  {
 		Button btnBlurHelp = new Button(grpAllImages, SWT.NONE);
 		btnBlurHelp.setText("?");
 		btnBlurHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
-		btnBlurHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnBlurHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnBlurHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/blur.png"));
@@ -333,7 +338,7 @@ public class GUI extends Composite  {
 		Button btnHDRHelp = new Button(grpAllImages, SWT.NONE);
 		btnHDRHelp.setText("?");
 		btnHDRHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
-		btnHDRHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnHDRHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnHDRHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/hdr.png"));
@@ -355,7 +360,7 @@ public class GUI extends Composite  {
 		Button btnDFTHelp = new Button(grpAllImages, SWT.NONE);
 		btnDFTHelp.setText("?");
 		btnDFTHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
-		btnDFTHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnDFTHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnDFTHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/DFT.png"));
@@ -384,7 +389,7 @@ public class GUI extends Composite  {
 		Button btnScanHelp = new Button(grpCurrentImageOnly, SWT.NONE);
 		btnScanHelp.setText("?");
 		btnScanHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
-		btnScanHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnScanHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnScanHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/scanner.png"));
@@ -406,7 +411,7 @@ public class GUI extends Composite  {
 		Button btnGAHelp = new Button(grpCurrentImageOnly, SWT.NONE);
 		btnGAHelp.setText("?");
 		btnGAHelp.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, true, 1, 1));
-		btnGAHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
+		btnGAHelp.setBackground(SWTResourceManager.getColor(SWT.COLOR_CYAN));
 		btnGAHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				showHelpMessage(new Image(display,"images/GA.png"));
@@ -479,7 +484,7 @@ public class GUI extends Composite  {
 	}
 
 	/**
-	 *  Crée un menu d'options dépendant de la fonction choisie.
+	 *  Cree un menu d'options dependant de la fonction choisie.
 	 */
 	void createOptionsMenu(){
 		if(image == null){ 
@@ -603,7 +608,6 @@ public class GUI extends Composite  {
 					HDRAlgorithm = algorithm.getSelectionIndex();
 				}
 			});
-
 			break;
 
 		case FOURIER_TRANSFORM:
@@ -773,13 +777,38 @@ public class GUI extends Composite  {
 
 			btnStop = new Button(optionsComposite, SWT.NONE);
 			btnStop.setText("Stop");
+			
+			nbTriangles = 100;
+			nbCircles = 100;
+
+			Label lblNewLabel7 = new Label(optionsComposite, SWT.NONE);
+			lblNewLabel7.setText("Number of triangles");
+			final Spinner triangles = new Spinner(optionsComposite, SWT.BORDER);
+
+			triangles.setSelection(nbTriangles);
+			triangles.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					nbTriangles = triangles.getSelection();
+				}
+			});
+			
+			Label lblNewLabel8 = new Label(optionsComposite, SWT.NONE);
+			lblNewLabel8.setText("Number of circles");
+			final Spinner circles = new Spinner(optionsComposite, SWT.BORDER);
+
+			circles.setSelection(nbCircles);
+			circles.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent arg0) {
+					nbCircles = circles.getSelection();
+				}
+			});
 
 		}
 		optionsBar.layout();
 	}
 
 	/**
-	 *  Crée le menu de préférences, et met à jour le GUI à sa fermeture.
+	 *  Cree le menu de preferences, et met a jour le GUI a sa fermeture.
 	 */
 	private void createPreferencesMenu() {
 		if(image == null){ 
@@ -810,16 +839,16 @@ public class GUI extends Composite  {
 	}
 
 	/**
-	 * Lance un traitement pour la fonction sélectionnée. Un seul traitement peut avoir lieu simultanément sur un même
+	 * Lance un traitement pour la fonction selectionnee. Un seul traitement peut avoir lieu simultanement sur un meme
 	 * ordinateur.
 	 */
 	private void apply(){
-		if(updater != null && updater.isAlive()){ 
-			showWarningMessage("Please wait for the current treatment to end");
-			return;
-		}
 		if(image == null){ 
 			showWarningMessage("Please select a file to work on");
+			return;
+		}	
+		if(updater != null && updater.isAlive()){ 
+			showWarningMessage("Please wait for the current treatment to end");
 			return;
 		}
 		if(selectedFunction == null){ 
@@ -836,7 +865,7 @@ public class GUI extends Composite  {
 	}
 
 	/**
-	 * Rafraîchit l'image en train d'être visionnée.
+	 * Rafraichit l'image en train d'etre visionnee.
 	 */
 	void refreshDisplay(){
 		imageNumber.setText((selectedImageNumber+1)+"/"+savedImages.length);
@@ -860,18 +889,21 @@ public class GUI extends Composite  {
 		gc.fillRectangle(imageFrame.getClientArea());
 		gc.drawImage(image, 0, 0);
 		gc.dispose();
+		
+		//shell.layout();
 	}
 
 	/**
-	 * Enregistre une image traitée dans le tableau d'images.
-	 * @param img l'image traitée
-	 * @param number le numéro de l'image
-	 * @param appliedFunction la fonction qui lui a été appliquée
+	 * Enregistre une image traitee dans le tableau d'images.
+	 * @param img l'image traitee
+	 * @param number le numero de l'image
+	 * @param appliedFunction la fonction qui lui a ete appliquee
 	 */
 	void updateImage(Image img, int number, ImageFunction appliedFunction){
 		if(savedImages != null){
 			savedImages[number] = img;
 			print("\n"+appliedFunction.getName()+" done for image "+(number+1), false);
+			refreshDisplay();
 		}
 	}
 
@@ -912,6 +944,10 @@ public class GUI extends Composite  {
 		}
 	}
 
+	/**
+	 * Ouvre une fenetre en la centrant sur l'ecran
+	 * @param shell
+	 */
 	static void openShell(Shell shell) {
 		Rectangle screenSize = display.getPrimaryMonitor().getBounds();
 		shell.setLocation((screenSize.width - shell.getBounds().width) / 2, (screenSize.height - shell.getBounds().height) / 2);

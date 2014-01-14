@@ -4,11 +4,6 @@ import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
-import java.io.File;
-import java.io.IOException;
-import java.util.TreeMap;
-
-import javax.imageio.ImageIO;
 
 public class Painter extends Thread{
 
@@ -19,18 +14,23 @@ public class Painter extends Thread{
 	private BufferedImage output;
 	private BufferedImage input;
 	
-	static int triPop = 100;
-	static int cirPop = 100;
+	static int triPop;
+	static int cirPop;
 	private int width, height, pop = 5, birthFac = 10;
 	private Sketch s;
 	private int fitness;
+	private int startingFitness;
 
-	public Painter(BufferedImage source) {
+	public Painter(BufferedImage source, int nbTriangles, int nbCircles) {
 		this.input = source;
 		this.width = source.getWidth(); this.height = source.getHeight();
+		
+		triPop = nbTriangles;
+		cirPop = nbCircles;
 
 		s = new Sketch(width,height,triPop,cirPop);
 		fitness = getDiff(s.getIm());
+		startingFitness = fitness;
 	}
 
 	public void run() {
@@ -47,8 +47,7 @@ public class Painter extends Thread{
 			if(i%100==0) {
 				setOutput(getBest(scale));	
 				
-				Toolkit.getDefaultToolkit().sync();
-				System.out.println("fitness = "+bestFitness()+
+				System.out.println("fitness = "+(int) bestFitness()+
 						"; time = "+((System.currentTimeMillis()-t)/1000)); }
 		}
 	}
@@ -68,8 +67,12 @@ public class Painter extends Thread{
 		return s.render(scale);
 	}
 
-	public int bestFitness() {
+	public double bestFitness() {
 		return fitness/input.getWidth()/input.getHeight();
+	}
+	
+	public double getProgress() {
+		return ( 1-((double) (fitness)/ startingFitness ) )*100;
 	}
 
 	private int getDiff(BufferedImage img) {
@@ -108,6 +111,7 @@ public class Painter extends Thread{
 		Graphics g = output.getGraphics();
 		g.drawImage(input,0,0,null);
 		g.drawImage(calculated,input.getWidth(),0,null);
+		Toolkit.getDefaultToolkit().sync();
 	}
 
 }

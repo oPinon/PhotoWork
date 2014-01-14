@@ -23,7 +23,7 @@ public class AutoBalanceTest {
 		System.out.println("nbThreads = "+nbThreads);
 		for(int i=0;i<256;i++) {System.out.println("value "+i+" : R="+R[i]+" G="+G[i]+" B="+B[i]);}
 		
-		PImage result = AutoBalance.balance(img, nbThreads);
+		PImage result = AutoBalance.balance(img, nbThreads, null);
 		new gAPainter.Display(result.getImage());
 	}
 

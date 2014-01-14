@@ -52,7 +52,7 @@ public class PreferencesMenu extends Composite {
 
 		Group grpNetwork = new Group(this, SWT.NONE);
 		grpNetwork.setLayout(new GridLayout(1, false));
-		grpNetwork.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 2));
+		grpNetwork.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 2));
 		grpNetwork.setText("Network");
 
 		serverList = new List(grpNetwork, SWT.BORDER | SWT.V_SCROLL);
@@ -62,10 +62,11 @@ public class PreferencesMenu extends Composite {
 		serverList.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent event) {
 				btnRemoveServer.setEnabled(serverList.getSelectionCount()!=0);
+				text.setText(serverList.getSelection()[0]);
 			}
 			public void widgetDefaultSelected(SelectionEvent arg0) {}
 		});		
-		IPs= g.IPList;
+		IPs = g.IPList;
 		for(String s: IPs){
 			serverList.add(s);
 		}
@@ -78,13 +79,12 @@ public class PreferencesMenu extends Composite {
 
 		Button btnAddServer = new Button(composite_1, SWT.NONE);
 		btnAddServer.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				String ip= text.getText();			
-				if(ip.length()!=0){
+				String ip = text.getText();			
+				if(ip.length() != 0){
 					try {
 						InetAddress.getByName(ip);	
-						Socket socket= new Socket();	
+						Socket socket = new Socket();	
 						socket.connect(new InetSocketAddress(ip, 6789), 1000);
 						socket.close();
 
@@ -92,10 +92,7 @@ public class PreferencesMenu extends Composite {
 						btnRemoveServer.setEnabled(true);
 					} catch (IOException e) {
 						GUI.showWarningMessage("Can't reach entered IP address");
-					} 
-					finally{
-						text.setText("");	
-					}													
+					} 												
 				}
 			}
 		});
@@ -171,7 +168,6 @@ public class PreferencesMenu extends Composite {
 
 		Button btnRestoreDefaults = new Button(composite, SWT.NONE);
 		btnRestoreDefaults.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				btnCheckButton.setSelection(true);
 				threadsSpinner.setSelection(AVAILABLE_THREADS);
@@ -188,7 +184,6 @@ public class PreferencesMenu extends Composite {
 
 		Button btnApplyChanges = new Button(composite, SWT.NONE);
 		btnApplyChanges.addSelectionListener(new SelectionAdapter() {
-			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				workOnAllFiles= btnCheckButton.getSelection();
 				threads= threadsSpinner.getSelection();
