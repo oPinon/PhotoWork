@@ -1,9 +1,13 @@
 package display;
 
+import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import network.Result;
 import network.Server;
 
 import org.eclipse.swt.SWT;
@@ -52,7 +56,7 @@ public class GUI extends Composite  {
 	private static Shell shell;
 
 	//RESEAU
-	private static ImageUpdater updater;
+	private static DisplayUpdater updater;
 	private static Server server; //traite les taches envoyees par les PC
 
 	//AFFICHAGE GRAPHIQUE
@@ -71,7 +75,7 @@ public class GUI extends Composite  {
 	private CLabel imageNumber;
 
 	//Boutons particuliers
-	private Button btnApply;
+	Button btnApply;
 	Button btnStop;	//GA Painter
 
 	//Barres de progression
@@ -101,7 +105,7 @@ public class GUI extends Composite  {
 	int[] scanPointsX = new int[4];
 	int[] scanPointsY = new int[4];
 	int scanFormat;
-	
+
 	//GA Painter
 	int nbTriangles;
 	int nbCircles;
@@ -483,6 +487,7 @@ public class GUI extends Composite  {
 		}
 	}
 
+
 	/**
 	 *  Cree un menu d'options dependant de la fonction choisie.
 	 */
@@ -501,7 +506,7 @@ public class GUI extends Composite  {
 					imageFrame.removeListener(SWT.MouseDown, listeners[i]);
 				}
 			}
-			
+
 			optionsComposite.dispose();
 			optionsComposite = new Composite(optionsBar, SWT.FILL);
 			optionsComposite.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));
@@ -777,7 +782,7 @@ public class GUI extends Composite  {
 
 			btnStop = new Button(optionsComposite, SWT.NONE);
 			btnStop.setText("Stop");
-			
+
 			nbTriangles = 100;
 			nbCircles = 100;
 
@@ -791,7 +796,7 @@ public class GUI extends Composite  {
 					nbTriangles = triangles.getSelection();
 				}
 			});
-			
+
 			Label lblNewLabel8 = new Label(optionsComposite, SWT.NONE);
 			lblNewLabel8.setText("Number of circles");
 			final Spinner circles = new Spinner(optionsComposite, SWT.BORDER);
@@ -860,7 +865,7 @@ public class GUI extends Composite  {
 			return;
 		}
 
-		updater = new ImageUpdater(this);
+		updater = new DisplayUpdater(this);
 		updater.start();
 	}
 
@@ -889,7 +894,7 @@ public class GUI extends Composite  {
 		gc.fillRectangle(imageFrame.getClientArea());
 		gc.drawImage(image, 0, 0);
 		gc.dispose();
-		
+
 		//shell.layout();
 	}
 
@@ -897,12 +902,10 @@ public class GUI extends Composite  {
 	 * Enregistre une image traitee dans le tableau d'images.
 	 * @param img l'image traitee
 	 * @param number le numero de l'image
-	 * @param appliedFunction la fonction qui lui a ete appliquee
 	 */
-	void updateImage(Image img, int number, ImageFunction appliedFunction){
+	void updateImage(Image img, int number){
 		if(savedImages != null){
 			savedImages[number] = img;
-			print("\n"+appliedFunction.getName()+" done for image "+(number+1), false);
 			refreshDisplay();
 		}
 	}
@@ -914,6 +917,11 @@ public class GUI extends Composite  {
 		localProgressBar.setProgress(selection);
 	}
 
+	/**
+	 * Ecrit un message dans la zone en bas a gauche de l'interface
+	 * @param s
+	 * @param clear indique si la zone d'affichage est reinitialisee
+	 */
 	void print(String s, boolean clear){
 		if(clear) infoLabel.setText("");
 		infoLabel.append(s);

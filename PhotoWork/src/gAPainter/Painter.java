@@ -19,8 +19,7 @@ public class Painter extends Thread{
 	private int width, height, pop = 5, birthFac = 10;
 	private Sketch s;
 	private int fitness;
-	private int startingFitness;
-
+	
 	public Painter(BufferedImage source, int nbTriangles, int nbCircles) {
 		this.input = source;
 		this.width = source.getWidth(); this.height = source.getHeight();
@@ -30,7 +29,6 @@ public class Painter extends Thread{
 
 		s = new Sketch(width,height,triPop,cirPop);
 		fitness = getDiff(s.getIm());
-		startingFitness = fitness;
 	}
 
 	public void run() {
@@ -67,12 +65,8 @@ public class Painter extends Thread{
 		return s.render(scale);
 	}
 
-	public double bestFitness() {
+	public synchronized double bestFitness() {
 		return fitness/input.getWidth()/input.getHeight();
-	}
-	
-	public double getProgress() {
-		return ( 1-((double) (fitness)/ startingFitness ) )*100;
 	}
 
 	private int getDiff(BufferedImage img) {

@@ -56,7 +56,7 @@ public class Client extends Thread{
 		newConnection();	
 		toSend.sendToStream(toServer);
 
-		System.out.println("client "+ip+": image "+(toSend.imageNumber+1)+" envoyee");
+		System.out.println("client "+ip+": image "+(toSend.getImageNumber()+1)+" envoyee");
 	}
 
 	private void receiveImage() throws IOException, InterruptedException{

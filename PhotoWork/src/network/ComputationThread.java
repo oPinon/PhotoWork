@@ -28,7 +28,7 @@ import gAPainter.Painter;
  */
 public class ComputationThread extends Thread {
 
-	Socket socket;
+	private Socket socket;
 
 	ComputationThread(Socket socket) {
 		this.socket = socket;
@@ -124,7 +124,7 @@ public class ComputationThread extends Thread {
 				int[] scanPointsY = {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
 				int formatIndex = fromClient.readInt();
 
-				output= Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, toClient);
+				output = Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, toClient);
 
 				break;
 
@@ -136,17 +136,19 @@ public class ComputationThread extends Thread {
 				p.start();
 
 				final Timer t = new Timer();
-				t.scheduleAtFixedRate(new TimerTask(){ public void run(){	
-					if(p.getOutput() != null){
-						try {
-							Result.sendDataToStream(p.getOutput(), imageNumber, p.getProgress(), toClient);
-						} catch (IOException e) {
-							cancel();
-							p.interrupt();
-						}
-					}
-				}}
-				,0,1000l); //envoi de l'image toutes les secondes
+				t.scheduleAtFixedRate(
+						new TimerTask(){ 
+							public void run(){	
+								if(p.getOutput() != null){
+									try {
+										Result.sendDataToStream(p.getOutput(), imageNumber, p.bestFitness(), toClient);
+									} catch (IOException e) {
+										cancel();
+										p.interrupt();
+									}
+								}
+							}}
+						,0,1000l); //envoi de l'image toutes les secondes
 
 				return;
 

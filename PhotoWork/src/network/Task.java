@@ -15,10 +15,10 @@ import filter.ImageFunction;
  *
  */
 public class Task {
-	BufferedImage image;
-	ImageFunction function;
-	int imageNumber;
-	int[] parameters;
+	private BufferedImage image;
+	private ImageFunction function;
+	private int imageNumber;
+	private int[] parameters;
 
 	public Task(BufferedImage image, ImageFunction functionID,
 			int imageNumber, int[] parameters) {
@@ -27,6 +27,10 @@ public class Task {
 		this.function = functionID;
 		this.imageNumber = imageNumber;
 		this.parameters = parameters;
+	}
+
+	public int getImageNumber() {
+		return imageNumber;
 	}
 
 	public void sendToStream(DataOutputStream toServer) throws IOException{

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 /**
- * Représente un tampon de tâches entre ImageUpdater et les clients, en suivant un modèle producteur/consommateur.
+ * Représente un tampon de taches entre DisplayUpdater et les clients, en suivant un modèle producteur/consommateur.
  * 
  * @author Pierre-Alexandre Durand
  *

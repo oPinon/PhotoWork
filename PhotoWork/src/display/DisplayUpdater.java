@@ -1,18 +1,23 @@
 package display;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import network.Buffer;
 import network.Client;
 import network.Result;
 import network.Task;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 import pImage.PImage;
 import filter.ImageFunction;
@@ -24,7 +29,7 @@ import filter.ImageFunction;
  * @author Pierre-Alexandre Durand
  *
  */
-public class ImageUpdater extends Thread {
+public class DisplayUpdater extends Thread {
 	private GUI g;
 
 	private ImageFunction selectedFunction;
@@ -40,7 +45,7 @@ public class ImageUpdater extends Thread {
 	private int scanFormat;
 	private int nbTriangles, nbCircles;
 
-	public ImageUpdater(GUI g) {
+	public DisplayUpdater(GUI g) {
 		this.g = g;
 		selectedFunction = g.selectedFunction;
 		workOnAllFiles = g.workOnAllFiles;
@@ -62,13 +67,15 @@ public class ImageUpdater extends Thread {
 	}
 
 	public void run(){
-		final long t1= System.currentTimeMillis();
+		final long t1 = System.currentTimeMillis();
 
-		g.getDisplay().asyncExec(new Runnable() {
+		g.getDisplay().syncExec(new Runnable() {  //necessaire car on met a jour le GUI depuis un thread externe
 			public void run() {
 				g.setGlobalProgressBarSelection(0);
+				g.btnApply.setText("Busy...");
+				g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
 			}
-		});
+		});	
 
 		final Image[] imagesToModify;
 		int count;	
@@ -91,9 +98,8 @@ public class ImageUpdater extends Thread {
 			clients.add(c);
 			c.start();
 		}
-		//int tasksLeft = imagesToModify.length;
 
-		
+
 		//Envoi
 		for(Image i: imagesToModify){		
 			ImageData id = i.getImageData();
@@ -126,8 +132,8 @@ public class ImageUpdater extends Thread {
 
 			case GA_PAINTER:	
 				task= new Task(input, selectedFunction, count, new int[]{nbTriangles, nbCircles});
-				
-				g.getDisplay().asyncExec(new Runnable() {
+
+				g.getDisplay().syncExec(new Runnable() {
 					public void run() {
 						g.btnStop.addSelectionListener(new SelectionAdapter() {
 							public void widgetSelected(SelectionEvent arg0) {
@@ -139,7 +145,7 @@ public class ImageUpdater extends Thread {
 				});	
 
 				break;
-				
+
 			default:
 				break;	
 			}
@@ -160,35 +166,37 @@ public class ImageUpdater extends Thread {
 				r = tasksDone.take();
 			} catch (InterruptedException e) {
 				for(Client c: clients) c.interrupt();
+				g.btnApply.setText("Apply !");
+				g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
 				return;
 			}
 
 			final BufferedImage output = new PImage(r.getResult()).getImage(); //nécessaire, sinon convertToSWT ne marche pas
 			final int number = r.getImageNumber();
 			final double progress = r.getProgress();
+			
+			final Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
+
 
 			if(progress == 100){
-				final Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
-
-			//	tasksLeft--;
 				final int done = Client.tasksCompleted.intValue();
-
-				g.getDisplay().asyncExec(new Runnable() {
+				g.getDisplay().syncExec(new Runnable() {
 					public void run() {
-						g.updateImage(i, number, selectedFunction);
+						g.updateImage(i, number);
+						g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
 						g.setGlobalProgressBarSelection(done*100/imagesToModify.length);
 						g.setLocalProgressBarSelection(100);
 					}
 				});	
 
 			} else{
-				g.getDisplay().asyncExec(new Runnable() {
+				g.getDisplay().syncExec(new Runnable() {
 					public void run() {	
-						if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entièrement traitées
-							Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
-							g.updateImage(i, number, selectedFunction);
+						if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entierement traitees					
+							g.updateImage(i, number);
+							g.print("GAPainter fitness: "+(int) progress, true);
 						}
-						g.setLocalProgressBarSelection(progress);
+						else g.setLocalProgressBarSelection(progress);
 					}
 				});	
 			}
@@ -199,12 +207,13 @@ public class ImageUpdater extends Thread {
 
 		final long t2 = System.currentTimeMillis();
 
-		g.getDisplay().asyncExec(new Runnable() {
+		g.getDisplay().syncExec(new Runnable() {
 			public void run() {
 				g.print("\n"+selectedFunction.getName()+" finished",false);
 				g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
-				if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux traitements à la suite
-				
+				if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans à la suite
+				g.btnApply.setText("Apply !");
+				g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
 			}
 		});	
 

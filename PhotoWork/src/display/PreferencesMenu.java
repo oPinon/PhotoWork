@@ -62,7 +62,7 @@ public class PreferencesMenu extends Composite {
 		serverList.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent event) {
 				btnRemoveServer.setEnabled(serverList.getSelectionCount()!=0);
-				text.setText(serverList.getSelection()[0]);
+				if(serverList.getSelectionCount() != 0) text.setText(serverList.getSelection()[0]);
 			}
 			public void widgetDefaultSelected(SelectionEvent arg0) {}
 		});		
