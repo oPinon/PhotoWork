@@ -113,37 +113,34 @@ public class Sketch {
 	 * 1) receives circles until "Int.maxValue" which means end of circles
 	 * 2) receives triangles until Int.maxValue which means end of the protocol
 	 */
-	public Sketch(Socket socket) throws IOException {
+	public Sketch(DataInputStream reader) throws IOException {
 		
-		DataInputStream reader = new DataInputStream(socket.getInputStream());
+		this.width = reader.readInt();
+		this.height = reader.readInt();
 		
-		this.width = reader.readInt(); System.out.println(this.width);
-		this.height = reader.readInt(); System.out.println(this.height);
-		
-		int flag = reader.readInt(); System.out.println(flag);
+		int flag = reader.readInt();
 		
 		ArrayList<Circle> receivedCircles = new ArrayList<Circle>();
 		
 		while(flag!=Integer.MAX_VALUE) {
 			int x = flag;
-			int y = reader.readInt(); System.out.println(y);
-			int size = reader.readInt(); System.out.println(size);
-			int R = reader.readInt(); System.out.println(R);
-			int G = reader.readInt(); System.out.println(G);
-			int B = reader.readInt(); System.out.println(B);
-			
+			int y = reader.readInt();
+			int size = reader.readInt();
+			int R = reader.readInt();
+			int G = reader.readInt();
+			int B = reader.readInt();
 			receivedCircles.add(new Circle(x,y,size,R,G,B));
 			
-			flag = reader.readInt(); System.out.println("flag = "+flag);
+			flag = reader.readInt();
 		}
 		
 		ArrayList<Triangle> receivedTriangles = new ArrayList<Triangle>();
 		
 		while(flag!=Integer.MAX_VALUE) {
-			int x0 = flag; int y0 = reader.readInt(); System.out.println(y0);
-			int x1 = reader.readInt(); int y1 = reader.readInt(); System.out.println(x1); System.out.println(y1);
-			int x2 = reader.readInt(); int y2 = reader.readInt(); System.out.println(x2); System.out.println(y2);
-			int R=reader.readInt(); int G=reader.readInt(); int B=reader.readInt(); System.out.println(R); System.out.println(G); System.out.println(B);
+			int x0 = flag; int y0 = reader.readInt();
+			int x1 = reader.readInt(); int y1 = reader.readInt();
+			int x2 = reader.readInt(); int y2 = reader.readInt();
+			int R=reader.readInt(); int G=reader.readInt(); int B=reader.readInt();
 			receivedTriangles.add(new Triangle(x0,y0,x1,y1,x2,y2,R,G,B));
 			flag = reader.readInt();
 		}
@@ -159,8 +156,7 @@ public class Sketch {
 		System.out.println(this.triangles.length);
 	}
 	
-	public void sendSketch(Socket socket) throws IOException {
-		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+	public void sendSketch(DataOutputStream out) throws IOException {
 		out.writeInt(this.width);
 		out.writeInt(this.height);
 		for(int i=0;i<this.circles.length;i++){

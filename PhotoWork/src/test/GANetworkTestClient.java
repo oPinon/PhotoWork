@@ -1,5 +1,6 @@
 package test;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -17,7 +18,7 @@ public class GANetworkTestClient {
 		// TODO Auto-generated method stub
 		Socket socket = new Socket("localhost",6897);
 		
-		Sketch sketch = new Sketch(socket);
+		Sketch sketch = new Sketch(new DataInputStream(socket.getInputStream()));
 		
 		new Display(sketch.getIm());
 	}

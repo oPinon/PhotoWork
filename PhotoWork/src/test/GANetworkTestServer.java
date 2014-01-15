@@ -1,5 +1,6 @@
 package test;
 import java.awt.image.BufferedImage;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -24,7 +25,7 @@ public class GANetworkTestServer {
 		
 		Socket socket = server.accept();
 		
-		sketch.sendSketch(socket);
+		sketch.sendSketch(new DataOutputStream(socket.getOutputStream()));
 	}
 
 }
