@@ -3,6 +3,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.io.IOException;
 
 public class Circle implements Shape{
 
@@ -16,6 +17,15 @@ public class Circle implements Shape{
 		int G = (int) (Math.random()*255);
 		int B = (int) (Math.random()*255);
 		color = new Color(R,G,B,alpha);
+	}
+	
+	public Circle(int x, int y, int size, int R, int G, int B) {
+		this.x=x; this.y=y; this.size=size; this.color = new Color(R,G,B,alpha);
+	}
+	
+	public void write(java.io.DataOutputStream out) throws IOException {
+		out.writeInt(x); out.writeInt(y); out.writeInt(size);
+		out.writeInt(color.getRed()); out.writeInt(color.getGreen()); out.writeInt(color.getBlue());
 	}
 	
 	public Circle(Circle other) {

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.io.IOException;
 
 public class Triangle implements Shape {
 
@@ -22,6 +23,19 @@ public class Triangle implements Shape {
 		int G = (int) (Math.random()*255);
 		int B = (int) (Math.random()*255);
 		color = new Color(R,G,B,alpha);
+	}
+	
+	public void write(java.io.DataOutputStream out) throws IOException {
+		out.writeInt(x[0]); out.writeInt(y[0]);
+		out.writeInt(x[1]); out.writeInt(y[1]);
+		out.writeInt(x[2]); out.writeInt(y[2]);
+		out.writeInt(color.getRed()); out.writeInt(color.getGreen()); out.writeInt(color.getBlue());
+	}
+	
+	public Triangle(int x0, int y0, int x1, int y1, int x2, int y2, int R, int G, int B) {
+		this.x = new int[] {x0,x1,x2};
+		this.y = new int[] {y0,y1,y2};
+		this.color = new Color(R,G,B,alpha);
 	}
 	
 	public Triangle(Triangle other) {
