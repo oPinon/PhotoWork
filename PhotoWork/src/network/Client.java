@@ -83,7 +83,7 @@ public class Client extends Thread{
 			fromServer = new DataInputStream(socket.getInputStream());
 			toServer = new DataOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
-			System.err.println("client "+ip+": erreur lors de la creation");
+			System.err.println("client "+ip+": erreur lors de la connection");
 			interrupt();
 		}
 	}

@@ -124,9 +124,7 @@ public class Sketch {
 		
 		ArrayList<Circle> receivedCircles = new ArrayList<Circle>();
 		
-		flag = reader.readInt();
-		
-		while(flag!=-42) {
+		while(flag!=Integer.MAX_VALUE) {
 			int x = flag;
 			int y = reader.readInt(); System.out.println(y);
 			int size = reader.readInt(); System.out.println(size);

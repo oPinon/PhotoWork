@@ -8,7 +8,7 @@ import filter.AutoBalance;
 
 public class Scanner{
 
-	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads, DataOutputStream toClient) {
+	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads, DataOutputStream toClient) throws IOException {
 		long t0 = System.currentTimeMillis();
 
 		int outputHeight;

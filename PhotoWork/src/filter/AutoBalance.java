@@ -10,7 +10,7 @@ import pImage.RGB;
 
 public class AutoBalance {
 
-	public static PImage balance(PImage img, int nbThreads, DataOutputStream toClient) {
+	public static PImage balance(PImage img, int nbThreads, DataOutputStream toClient) throws IOException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		int[] temp = getMinMax(img, 0, nbThreads);
@@ -23,11 +23,7 @@ public class AutoBalance {
 				int B = transform(c0.getB(),minV,maxV);
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
-			try {
 				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 		return toReturn;
 	}
@@ -69,7 +65,7 @@ public class AutoBalance {
 		return toReturn;
 	}
 	
-	public static PImage balanceColors(PImage img, int blurSize, DataOutputStream toClient) {
+	public static PImage balanceColors(PImage img, int blurSize, DataOutputStream toClient) throws IOException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		PImage blurred = BlurFilter.blur(img, blurSize, null);
@@ -98,11 +94,8 @@ public class AutoBalance {
 				int B = transform(c0.getB(),minB,maxB);
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
-			try {
+
 				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 		return toReturn;
 	}

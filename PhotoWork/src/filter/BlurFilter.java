@@ -9,7 +9,7 @@ import pImage.RGB;
 
 public class BlurFilter {
 
-	public static PImage blur(PImage image, int blurSize, DataOutputStream toClient) {
+	public static PImage blur(PImage image, int blurSize, DataOutputStream toClient) throws IOException {
 		long t0 = System.currentTimeMillis();
 		PImage expanded = expand(image,blurSize);
 		System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
@@ -29,11 +29,7 @@ public class BlurFilter {
 				}
 				blurred.setCol(x, y, new RGB(R/n,G/n,B/n));
 			}
-			try {
 				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 		System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
 		return cut(blurred,blurSize);
