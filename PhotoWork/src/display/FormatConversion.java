@@ -12,8 +12,6 @@ import org.eclipse.swt.graphics.RGB;
 
 /**
  * Convertit les Images SWT utilisées par le GUI en BufferedImages utilisées lors du traitement, et vice et versa.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class FormatConversion {

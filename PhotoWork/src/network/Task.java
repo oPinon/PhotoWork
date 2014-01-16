@@ -10,8 +10,6 @@ import filter.ImageFunction;
 
 /**
  * Représente une image à traiter, avec les paramètres du traitement.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class Task {

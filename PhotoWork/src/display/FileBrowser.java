@@ -5,8 +5,6 @@ import org.eclipse.swt.widgets.*;
 
 /**
  * Explorateur de fichier, permettant d'en charger et d'en sauvegarder plusieurs à la fois.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class FileBrowser {

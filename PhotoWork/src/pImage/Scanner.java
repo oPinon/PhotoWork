@@ -29,12 +29,12 @@ public class Scanner{
 
 		transformed = AutoBalance.balance(transformed, nbThreads, null);
 
-		System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
+	//	System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
 		return transformed;
 
 	}
 
-	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height, DataOutputStream toClient) { // x and y are int[4] and M1 M2 M4 M3 are clockwise points
+	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height, DataOutputStream toClient) throws IOException { // x and y are int[4] and M1 M2 M4 M3 are clockwise points
 		double x1 = x5[0]; double x2 = x5[1]; double x3 = x5[2]; double x4 = x5[3];
 		double y1 = y5[0]; double y2 = y5[1]; double y3 = y5[2]; double y4 = y5[3];
 
@@ -56,11 +56,9 @@ public class Scanner{
 				double Y = Ay*i*j + By*i + Cy*j + Dy;
 				toReturn.setCol(i, j, bilinear(img,X,Y));
 			}
-			try {
-				Result.sendDataToStream(null, 0, Math.min( (i*100.0)/img.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+
+			Result.sendDataToStream(null, 0, Math.min( (i*100.0)/img.width() , 99.99), toClient );
+
 		}
 		return toReturn;
 	}

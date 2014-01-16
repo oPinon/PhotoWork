@@ -5,13 +5,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
 import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
 
 public class Sketch {
 
@@ -122,7 +117,7 @@ public class Sketch {
 		
 		ArrayList<Circle> receivedCircles = new ArrayList<Circle>();
 		
-		while(flag!=Integer.MAX_VALUE) {
+		while(flag != Integer.MAX_VALUE) {
 			int x = flag;
 			int y = reader.readInt();
 			int size = reader.readInt();
@@ -136,7 +131,9 @@ public class Sketch {
 		
 		ArrayList<Triangle> receivedTriangles = new ArrayList<Triangle>();
 		
-		while(flag!=Integer.MAX_VALUE) {
+		flag = reader.readInt();
+		
+		while(flag != Integer.MAX_VALUE) {
 			int x0 = flag; int y0 = reader.readInt();
 			int x1 = reader.readInt(); int y1 = reader.readInt();
 			int x2 = reader.readInt(); int y2 = reader.readInt();
@@ -153,7 +150,6 @@ public class Sketch {
 		for(int i=0; i<triPop; i++){this.triangles[i]=receivedTriangles.get(i);}
 		this.image = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
 		updateImage();
-		System.out.println(this.triangles.length);
 	}
 	
 	public void sendSketch(DataOutputStream out) throws IOException {

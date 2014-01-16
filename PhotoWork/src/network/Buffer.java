@@ -9,8 +9,6 @@ import java.util.concurrent.Semaphore;
 
 /**
  * Représente un tampon de taches entre DisplayUpdater et les clients, en suivant un modèle producteur/consommateur.
- * 
- * @author Pierre-Alexandre Durand
  *
  * @param <T> soit une tâche à accomplir (Task), soit une tâche accomplie (Result)
  */

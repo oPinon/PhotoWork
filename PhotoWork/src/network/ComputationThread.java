@@ -6,8 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.imageio.ImageIO;
 
@@ -18,12 +16,10 @@ import filter.AutoBalance;
 import filter.BlurFilter;
 import filter.HDREqualizer;
 import filter.ImageFunction;
-import gAPainter.Painter;
+import gAPainter.PainterSlave;
 
 /**
- * Réalise le traitement d'une image.
- * 
- * @author Pierre-Alexandre
+ * Realise le traitement d'une image.
  *
  */
 public class ComputationThread extends Thread {
@@ -52,7 +48,7 @@ public class ComputationThread extends Thread {
 			}
 			PImage input = new PImage(b);
 
-			Result.sendDataToStream(null, 0, 0, toClient);
+			//		Result.sendDataToStream(null, 0, 0, toClient);
 			PImage output= new PImage(0,0);	
 			fromClient.skip(16); //on saute deux octets a la fin de l'image, dus au format png
 
@@ -98,13 +94,13 @@ public class ComputationThread extends Thread {
 				Graphics2D g = source.createGraphics();
 				g.drawImage(b, 0, 0, 64, 64, null);
 				g.dispose();
-				System.out.println("image loaded");
+				//	System.out.println("image loaded");
 				//makes it a PImage object
 				PImage img = new PImage(source);
-				System.out.println("image converted to PImage");
+				//	System.out.println("image converted to PImage");
 				//does a Fourier Transform to create the image's spectrum
 				ImageSpectrum spectrum = new ImageSpectrum(img, toClient);
-				System.out.println("spectrum computed");
+				//System.out.println("spectrum computed");
 
 				if(isHighPassFilterOn == 0){
 					output = spectrum.getTransform(isScalingLog==1);
@@ -114,7 +110,7 @@ public class ComputationThread extends Thread {
 					PImage result = spectrum.getReverseTransform();
 					output = filter.AutoBalance.balanceColors(result, null);
 
-					System.out.println("reverse transform done");
+					//	System.out.println("reverse transform done");
 				}
 				break;
 
@@ -128,27 +124,11 @@ public class ComputationThread extends Thread {
 
 				break;
 
-			case GA_PAINTER:	
+			case GA_PAINTER:
+				int cirPop = fromClient.readInt();	
 				int triPop = fromClient.readInt();
-				int cirPop = fromClient.readInt();
 
-				final Painter p = new Painter(b,triPop,cirPop);		
-				p.start();
-
-				final Timer t = new Timer();
-				t.scheduleAtFixedRate(
-						new TimerTask(){ 
-							public void run(){	
-								if(p.getOutput() != null){
-									try {
-										Result.sendDataToStream(p.getOutput(), imageNumber, p.bestFitness(), toClient);
-									} catch (IOException e) {
-										cancel();
-										p.interrupt();
-									}
-								}
-							}}
-						,0,1000l); //envoi de l'image toutes les secondes
+				new PainterSlave(input.getImage(), cirPop, triPop, socket);
 
 				return;
 
@@ -158,7 +138,7 @@ public class ComputationThread extends Thread {
 			Result.sendDataToStream(output.getImage(), imageNumber, 100, toClient );
 			System.out.println("computationThread: image traitee et renvoyee");
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("computationThread: I/O Error");
 		}
 	}
 }

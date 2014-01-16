@@ -13,12 +13,12 @@ public class Painter extends Thread{
 	
 	public Painter(BufferedImage sourceImg, int cirPop, int triPop) {
 		this.sourceImg=sourceImg; this.cirPop=cirPop; this.triPop=triPop;
-		bestSketch = new Sketch(sourceImg.getWidth(),sourceImg.getHeight(),triPop,cirPop);
+		bestSketch = new Sketch(sourceImg.getWidth(),sourceImg.getHeight(),this.triPop,this.cirPop);
 		fitness = getFitness(sourceImg,bestSketch.getIm());
 	}
 	
 	public void run() {
-		while(true) {
+		while(!isInterrupted()) {
 			Sketch newSketch;
 			synchronized(bestSketch) {
 				newSketch = new Sketch(bestSketch);

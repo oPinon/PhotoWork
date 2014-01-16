@@ -21,11 +21,10 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 /**
  * Cette classe représente le menu des préférences, où l'utilisateur définit les principaux paramètres de l'application.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class PreferencesMenu extends Composite {
@@ -78,6 +77,7 @@ public class PreferencesMenu extends Composite {
 		text = new Text(composite_1, SWT.BORDER);
 
 		Button btnAddServer = new Button(composite_1, SWT.NONE);
+		btnAddServer.setForeground(SWTResourceManager.getColor(SWT.COLOR_BLACK));
 		btnAddServer.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
 				String ip = text.getText();			

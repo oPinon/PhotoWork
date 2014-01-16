@@ -28,7 +28,7 @@ public class AutoBalance {
 		return toReturn;
 	}
 
-	public static PImage balanceColors(PImage img, DataOutputStream toClient) {
+	public static PImage balanceColors(PImage img, DataOutputStream toClient) throws IOException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		
@@ -56,11 +56,9 @@ public class AutoBalance {
 				int B = transform(c0.getB(),minB,maxB);
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
-			try {
+
 				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+
 		}
 		return toReturn;
 	}
@@ -119,14 +117,14 @@ public class AutoBalance {
 		for(int min=0;min<256;min++){
 			if(Math.max(R[min], Math.max(G[min], B[min]))>threshold) {
 				minV = min;
-				System.out.println("min = "+min);
+	//			System.out.println("min = "+min);
 				 break;
 			}
 		}
 		for(int max=255;max>=0;max--){
 			if(Math.max(R[max], Math.max(G[max], B[max]))>threshold) {
 				maxV = max;
-				System.out.println("max = "+max);
+	//			System.out.println("max = "+max);
 				break;
 			}
 		}

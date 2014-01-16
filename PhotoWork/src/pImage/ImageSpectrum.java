@@ -12,7 +12,7 @@ public class ImageSpectrum {
 	private Spectrum BSpectrum;
 	private int width, height;
 
-	public ImageSpectrum(PImage source, DataOutputStream toClient) {
+	public ImageSpectrum(PImage source, DataOutputStream toClient) throws IOException {
 		this.width=source.width(); this.height=source.height();
 		RSpectrum = new Spectrum(width,height);
 		GSpectrum = new Spectrum(width,height);
@@ -36,11 +36,7 @@ public class ImageSpectrum {
 				GSpectrum.setComplex(fx, fy, G);
 				BSpectrum.setComplex(fx, fy, B);
 			}
-			try {
 				Result.sendDataToStream(null, 0, Math.min( (fx*100.0)/source.width() , 99.99), toClient );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 

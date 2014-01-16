@@ -1,10 +1,9 @@
 package filter;
 
 /**
- * Enumération des différentes fonctions de l'application. Indique aussi si elles peuvent s'appliquer à plusieurs images
- * en même temps.
+ * Enumeration des différentes fonctions de l'application. Indique aussi si elles peuvent s'appliquer a plusieurs images
+ * en meme temps.
  * 
- * @author Pierre-Alexandre Durand
  *
  */
 public enum ImageFunction {

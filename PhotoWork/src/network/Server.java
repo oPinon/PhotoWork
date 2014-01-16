@@ -6,8 +6,6 @@ import java.net.ServerSocket;
 
 /**
  * Le serveur reçoit les demandes de traitement émanant des clients des ordinateurs utilisant l'application.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class Server extends Thread{

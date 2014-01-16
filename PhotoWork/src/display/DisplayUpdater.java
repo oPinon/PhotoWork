@@ -1,16 +1,13 @@
 package display;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import network.Buffer;
 import network.Client;
 import network.Result;
 import network.Task;
+import network.UpdaterClient;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -22,12 +19,11 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import pImage.PImage;
 import filter.ImageFunction;
+import gAPainter.PainterMaster;
 
 /**
  * Cette classe sert d'interface entre le GUI et les clients, en transmettant les données à traiter aux clients et 
  * en mettant à jour le GUI à partir des données reçues.
- * 
- * @author Pierre-Alexandre Durand
  *
  */
 public class DisplayUpdater extends Thread {
@@ -46,7 +42,7 @@ public class DisplayUpdater extends Thread {
 	private int scanFormat;
 	private int nbTriangles, nbCircles;
 
-	private List<Client> clients = new ArrayList<Client>();
+	private List<UpdaterClient> clients = new ArrayList<UpdaterClient>();
 
 	public DisplayUpdater(GUI g) {
 		this.g = g;
@@ -86,19 +82,23 @@ public class DisplayUpdater extends Thread {
 			}
 
 			Buffer<Task> tasksToDo = new Buffer<Task>();
-			Buffer<Result> tasksDone = new Buffer<Result>();
+			final Buffer<Result> tasksDone = new Buffer<Result>();
 
-			for(String s: IPList){
-				Client c = new Client(s, tasksToDo, tasksDone);
-				clients.add(c);
-				c.start();
+			if(selectedFunction != ImageFunction.GA_PAINTER){
+				for(String ip: IPList){
+					Client c = new Client(ip, tasksToDo, tasksDone);
+					clients.add(c);
+					c.start();
+				}
 			}
 
 			g.getDisplay().syncExec(new Runnable() {  //necessaire car on met a jour le GUI depuis un thread externe
 				public void run() {
-					g.setGlobalProgressBarSelection(0);
-					g.btnApply.setText("Busy...");
-					g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
+					try{
+						g.setGlobalProgressBarSelection(0);
+						g.btnApply.setText("Busy...");
+						g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
+					} catch(SWTException e){}
 				}
 			});	
 
@@ -131,24 +131,30 @@ public class DisplayUpdater extends Thread {
 					task = new Task(input, selectedFunction, count, new int[]{nbThreads,scanPointsX[0],scanPointsX[1],
 							scanPointsX[2],scanPointsX[3],scanPointsY[0],scanPointsY[1],scanPointsY[2],scanPointsY[3],
 							scanFormat});
+
 					break;
 
-				case GA_PAINTER:	
-					task = new Task(input, selectedFunction, count, new int[]{nbTriangles, nbCircles});
+				case GA_PAINTER:
+					task = new Task(input, selectedFunction, count, new int[]{nbCircles, nbTriangles});
+
+					PainterMaster pMaster = new PainterMaster(IPList, tasksToDo, tasksDone);
+					clients.add(pMaster);
+					pMaster.start();
 
 					g.getDisplay().syncExec(new Runnable() {
 						public void run() {
 							g.btnStop.addSelectionListener(new SelectionAdapter() {
 								public void widgetSelected(SelectionEvent arg0) {
-									interrupt();
-									for(Client c: clients) c.interrupt();
-									g.btnApply.setText("Apply !");
-									g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+									try{
+										interrupt();
+										for(UpdaterClient c: clients) c.interrupt();
+										g.btnApply.setText("Apply !");
+										g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+									} catch(SWTException e){}
 								}
 							});
 						}
 					});	
-
 					break;
 
 				default:
@@ -170,23 +176,26 @@ public class DisplayUpdater extends Thread {
 				final Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
 
 				g.getDisplay().syncExec(new Runnable() {
-					public void run() {
-						if(progress == 100){
-							final int done = Client.tasksCompleted.intValue();
+					public void run(){
+						try{
+							if(progress == 100){
+								final int done = Client.tasksCompleted.intValue();
 
-							g.updateImage(i, number);
-							g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
-							g.setGlobalProgressBarSelection(done*100/imagesToModify.length);
-							g.setLocalProgressBarSelection(100);
-						}
-
-						else{
-							if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entierement traitees					
 								g.updateImage(i, number);
-								g.print("GAPainter fitness: "+(int) progress, true);
+								g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
+								g.setGlobalProgressBarSelection(done*100/imagesToModify.length);
+								g.setLocalProgressBarSelection(100);
 							}
-							else g.setLocalProgressBarSelection(progress);
-						}
+
+							else{
+								if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entierement traitees					
+									g.updateImage(i, number);
+									g.print("GAPainter fitness: "+(int) progress, true);
+								}
+								else g.setLocalProgressBarSelection(progress);
+							}
+						} catch(SWTException e) {return;}
+
 					}
 				});
 			}
@@ -195,23 +204,32 @@ public class DisplayUpdater extends Thread {
 
 			g.getDisplay().syncExec(new Runnable() {
 				public void run() {
-					g.print("\n"+selectedFunction.getName()+" finished",false);
-					g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
-					if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans à la suite
+					try{
+						g.print("\n"+selectedFunction.getName()+" finished",false);
+						g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
+						if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans à la suite
+					} catch(SWTException e){}
 				}
 			});	
 
-		} catch (InterruptedException | SWTException e) {
-			e.printStackTrace();
+
+		} catch (InterruptedException e) {
+			System.err.println("DisplayUpdater: interruption");
 		} finally{
-			for(Client c: clients) c.interrupt();
-			g.getDisplay().syncExec(new Runnable() {
-				public void run() {
-					g.btnApply.setText("Apply !");
-					g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
-				}
-			});	
+			for(UpdaterClient c: clients) c.interrupt();
+
+			if(!g.isDisposed()){
+				g.getDisplay().syncExec(new Runnable() {
+					public void run() {
+						try{
+							g.btnApply.setText("Apply !");
+							g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+						} catch(SWTException e){}
+					}
+				});	
+			}
 		}
+
 	}
 
 }

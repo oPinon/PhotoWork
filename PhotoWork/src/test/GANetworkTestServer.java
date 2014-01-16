@@ -1,14 +1,11 @@
 package test;
-import java.awt.image.BufferedImage;
+import gAPainter.Display;
+import gAPainter.Sketch;
+
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import javax.imageio.ImageIO;
-
-import gAPainter.*;
 
 public class GANetworkTestServer {
 
@@ -26,6 +23,8 @@ public class GANetworkTestServer {
 		Socket socket = server.accept();
 		
 		sketch.sendSketch(new DataOutputStream(socket.getOutputStream()));
+		
+		server.close();
 	}
 
 }

@@ -8,8 +8,6 @@ import javax.imageio.ImageIO;
 
 /**
  * Represente le resultat d'un traitement en cours ou fini: image traitee et son numero.
- * 
- * @author Pierre-Alexandre Durand
  *   
  */
 public class Result {

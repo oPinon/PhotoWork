@@ -12,6 +12,7 @@ import javax.swing.Timer;
 
 public class Display extends JPanel implements ActionListener{
 
+	private static final long serialVersionUID = 1L;
 	private BufferedImage source, img;
 	Timer timer;
 	

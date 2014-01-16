@@ -1,13 +1,9 @@
 package display;
 
-import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import network.Result;
 import network.Server;
 
 import org.eclipse.swt.SWT;
@@ -44,7 +40,6 @@ import filter.ImageFunction;
 
 /**
  * La classe principale. Base de l'IHM.
- * @author Pierre-Alexandre Durand
  *
  */
 public class GUI extends Composite  {
@@ -474,13 +469,13 @@ public class GUI extends Composite  {
 		});
 
 		try {
-			IPList= new String[]{InetAddress.getLocalHost().getHostAddress()};
+			IPList = new String[]{InetAddress.getLocalHost().getHostAddress()};
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 		}
 
 		try {
-			server= new Server();
+			server = new Server();
 			server.start();
 		} catch (BindException e1) {
 			throw e1;

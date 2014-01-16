@@ -21,6 +21,7 @@ public class GANetworkTestClient {
 		Sketch sketch = new Sketch(new DataInputStream(socket.getInputStream()));
 		
 		new Display(sketch.getIm());
+		socket.close();
 	}
 
 }
