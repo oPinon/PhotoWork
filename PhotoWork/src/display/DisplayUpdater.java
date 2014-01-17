@@ -1,15 +1,19 @@
 package display;
 
+import imageComputing.Buffer;
+import imageComputing.Client;
+import imageComputing.LocalClient;
+import imageComputing.NetworkClient;
+import imageComputing.Result;
+import imageComputing.Task;
+
 import java.awt.image.BufferedImage;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import network.Buffer;
-import network.Client;
-import network.Result;
-import network.Task;
-import network.UpdaterClient;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -22,13 +26,14 @@ import filter.ImageFunction;
 import gAPainter.PainterMaster;
 
 /**
- * Cette classe sert d'interface entre le GUI et les clients, en transmettant les données à traiter aux clients et 
- * en mettant à jour le GUI à partir des données reçues.
+ * Cette classe sert d'interface entre le GUI et les clients, en transmettant les donnees ï¿½ traiter aux clients et 
+ * en mettant a jour le GUI a partir des donnees recues.
  *
  */
 public class DisplayUpdater extends Thread {
 	private GUI g;
 
+	//PARAMETRES DU GUI
 	private ImageFunction selectedFunction;
 	private boolean workOnAllFiles;
 	private Image[] savedImages;
@@ -42,7 +47,20 @@ public class DisplayUpdater extends Thread {
 	private int scanFormat;
 	private int nbTriangles, nbCircles;
 
-	private List<UpdaterClient> clients = new ArrayList<UpdaterClient>();
+
+	//PARAMETRES DE TRAITEMENT
+	private List<Client> clients = new ArrayList<Client>();
+
+	private double progress;
+	private int number;
+	private BufferedImage output;
+	private Image convertedOutput;
+
+	private Buffer<Task> tasksToDo;
+	private Buffer<Result> tasksDone;
+
+	public static AtomicInteger tasksCompleted;
+
 
 	public DisplayUpdater(GUI g) {
 		this.g = g;
@@ -81,23 +99,17 @@ public class DisplayUpdater extends Thread {
 				imagesToModify[0] = savedImages[count];
 			}
 
-			Buffer<Task> tasksToDo = new Buffer<Task>();
-			final Buffer<Result> tasksDone = new Buffer<Result>();
-
-			if(selectedFunction != ImageFunction.GA_PAINTER){
-				for(String ip: IPList){
-					Client c = new Client(ip, tasksToDo, tasksDone);
-					clients.add(c);
-					c.start();
-				}
-			}
+			tasksCompleted = new AtomicInteger(0);
+			tasksToDo = new Buffer<Task>();
+			tasksDone = new Buffer<Result>();		
+			createClients();
 
 			g.getDisplay().syncExec(new Runnable() {  //necessaire car on met a jour le GUI depuis un thread externe
 				public void run() {
 					try{
 						g.setGlobalProgressBarSelection(0);
 						g.btnApply.setText("Busy...");
-						g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
+						g.btnApply.setBackground(SWTResourceManager.getColor(GUI.UNDO_COLOR));
 					} catch(SWTException e){}
 				}
 			});	
@@ -106,7 +118,7 @@ public class DisplayUpdater extends Thread {
 			//Envoi
 			for(Image i: imagesToModify){		
 				ImageData id = i.getImageData();
-				BufferedImage input = FormatConversion.convertToAWT(id);
+				BufferedImage input = ImageUtilities.convertToAWT(id);
 
 				Task task = null;
 
@@ -137,19 +149,15 @@ public class DisplayUpdater extends Thread {
 				case GA_PAINTER:
 					task = new Task(input, selectedFunction, count, new int[]{nbCircles, nbTriangles});
 
-					PainterMaster pMaster = new PainterMaster(IPList, tasksToDo, tasksDone);
-					clients.add(pMaster);
-					pMaster.start();
-
 					g.getDisplay().syncExec(new Runnable() {
 						public void run() {
 							g.btnStop.addSelectionListener(new SelectionAdapter() {
 								public void widgetSelected(SelectionEvent arg0) {
 									try{
 										interrupt();
-										for(UpdaterClient c: clients) c.interrupt();
+										for(Client c: clients) c.interrupt();
 										g.btnApply.setText("Apply !");
-										g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+										g.btnApply.setBackground(SWTResourceManager.getColor(GUI.APPLY_COLOR));
 									} catch(SWTException e){}
 								}
 							});
@@ -166,38 +174,52 @@ public class DisplayUpdater extends Thread {
 			}
 
 			//Reception
-			while(Client.tasksCompleted.intValue() < imagesToModify.length){
-				Result r = tasksDone.take();
+			while(tasksCompleted.intValue() < imagesToModify.length){
 
-				final BufferedImage output = new PImage(r.getResult()).getImage(); //necessaire, sinon convertToSWT ne marche pas
-				final int number = r.getImageNumber();
-				final double progress = r.getProgress();
+				do{
+					Result r = tasksDone.take();
 
-				final Image i = new Image(g.getDisplay(), FormatConversion.convertToSWT(output));
+					output  = new PImage(r.getResult()).getImage(); //necessaire, sinon convertToSWT ne marche pas
+					number = r.getImageNumber();
+					progress = r.getProgress();
+					convertedOutput = new Image(g.getDisplay(), ImageUtilities.convertToSWT(output));
 
-				g.getDisplay().syncExec(new Runnable() {
-					public void run(){
-						try{
-							if(progress == 100){
-								final int done = Client.tasksCompleted.intValue();
+					g.getDisplay().syncExec(new Runnable() {
+						public void run() {
+							try{
+								if(output.getWidth() == 1){	
+									g.setLocalProgressBarSelection(progress);  //images hors GAPainter
+								}
 
-								g.updateImage(i, number);
-								g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
-								g.setGlobalProgressBarSelection(done*100/imagesToModify.length);
-								g.setLocalProgressBarSelection(100);
-							}
-
-							else{
-								if(output.getWidth()>1){   //pour GA Painter, qui envoie des images non entierement traitees					
-									g.updateImage(i, number);
+								else{   //pour GA Painter, qui envoie des images non entierement traitees					
+									g.updateImage(convertedOutput, number);
+									g.refreshDisplay();
 									g.print("GAPainter fitness: "+(int) progress, true);
 								}
-								else g.setLocalProgressBarSelection(progress);
-							}
-						} catch(SWTException e) {return;}
+							} catch(SWTException e){}
+						}
+					});	
 
+
+				} while(progress != 100);
+
+				g.getDisplay().syncExec(new Runnable() {
+					public void run() {
+						try{
+							if(output.getWidth()>1){ 
+								g.updateImage(convertedOutput, number);
+								g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
+								g.setGlobalProgressBarSelection(tasksCompleted.intValue()*100/imagesToModify.length);
+								g.setLocalProgressBarSelection(100);
+							}
+							else g.setLocalProgressBarSelection(progress);
+
+						} catch(SWTException e){}
 					}
-				});
+				});	
+
+
+
 			}
 
 			final long t2 = System.currentTimeMillis();
@@ -205,9 +227,10 @@ public class DisplayUpdater extends Thread {
 			g.getDisplay().syncExec(new Runnable() {
 				public void run() {
 					try{
+						g.refreshDisplay();
 						g.print("\n"+selectedFunction.getName()+" finished",false);
 						g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
-						if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans à la suite
+						if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans a la suite
 					} catch(SWTException e){}
 				}
 			});	
@@ -215,21 +238,69 @@ public class DisplayUpdater extends Thread {
 
 		} catch (InterruptedException e) {
 			System.err.println("DisplayUpdater: interruption");
+		} catch (UnknownHostException e1) {
+			e1.printStackTrace();
 		} finally{
-			for(UpdaterClient c: clients) c.interrupt();
+			for(Client c: clients) c.interrupt(); //arret des Clients
 
 			if(!g.isDisposed()){
 				g.getDisplay().syncExec(new Runnable() {
 					public void run() {
 						try{
 							g.btnApply.setText("Apply !");
-							g.btnApply.setBackground(SWTResourceManager.getColor(SWT.COLOR_GREEN));
+							g.btnApply.setBackground(SWTResourceManager.getColor(GUI.APPLY_COLOR));
 						} catch(SWTException e){}
 					}
 				});	
 			}
 		}
 
+	}
+
+	/**
+	 * Cree les Clients en fonctions des parametres:
+	 * -des LocalClients si toutes les IP entrees par l'utilisateur sont celles de la machine courante
+	 * -des NetworkClients sinon, et si la fonction n'est pas GAPainter
+	 * -des PainterMasters si on est en réseau et la fonction est GAPainter
+	 * 
+	 * @throws UnknownHostException
+	 */
+	private void createClients() throws UnknownHostException {
+		final String localIP = InetAddress.getLocalHost().getHostAddress();
+
+		for(String ip: IPList){
+			if(!ip.equals(localIP)){   //dans ce cas on passe en mode reseau
+				if(selectedFunction != ImageFunction.GA_PAINTER){
+					for(String ip1: IPList){
+						System.out.println("MODE RESEAU");
+						NetworkClient nc = new NetworkClient(ip1, tasksToDo, tasksDone);
+						clients.add(nc);
+						nc.start();
+					}
+					return; 
+				} 
+
+				else{      //client particulier pour GA Painter
+					System.out.println("MODE RESEAU - GA PAINTER");
+					PainterMaster pMaster = new PainterMaster(IPList, tasksToDo, tasksDone);
+					clients.add(pMaster);
+					pMaster.start();
+					return;
+				}
+			}
+		}	
+
+		//si toutes les IP sont identiques on passe en mode local
+		System.out.println("MODE LOCAL");
+		for(int i=0; i<nbThreads; i++){
+			LocalClient lc = new LocalClient(tasksToDo, tasksDone, i);
+			clients.add(lc);
+			lc.start();
+		}
+	}
+
+	public static void incrementTasks(){
+		tasksCompleted.getAndIncrement();
 	}
 
 }

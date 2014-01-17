@@ -11,7 +11,7 @@ import filter.*;
 
 public class AutoBalanceTest {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		BufferedImage source = ImageIO.read(new File("monaRaw.png"));
 		PImage img = new PImage(source);

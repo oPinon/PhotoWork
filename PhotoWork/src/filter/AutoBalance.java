@@ -1,16 +1,14 @@
 package filter;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import network.Result;
+import imageComputing.Buffer;
+import imageComputing.Result;
 import pImage.PColor;
 import pImage.PImage;
 import pImage.RGB;
 
 public class AutoBalance {
 
-	public static PImage balance(PImage img, int nbThreads, DataOutputStream toClient) throws IOException {
+	public static PImage balance(PImage img, int nbThreads, Buffer<Result> streamBuffer) throws InterruptedException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		int[] temp = getMinMax(img, 0, nbThreads);
@@ -23,12 +21,15 @@ public class AutoBalance {
 				int B = transform(c0.getB(),minV,maxV);
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
-				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
+			
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (x*100.0)/img.width() , 99.99)) );
+			
 		}
 		return toReturn;
 	}
 
-	public static PImage balanceColors(PImage img, DataOutputStream toClient) throws IOException {
+	public static PImage balanceColors(PImage img, Buffer<Result> streamBuffer) throws InterruptedException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		
@@ -57,13 +58,14 @@ public class AutoBalance {
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
 
-				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (x*100.0)/img.width() , 99.99)) );
 
 		}
 		return toReturn;
 	}
 	
-	public static PImage balanceColors(PImage img, int blurSize, DataOutputStream toClient) throws IOException {
+	public static PImage balanceColors(PImage img, int blurSize, Buffer<Result> streamBuffer) throws InterruptedException {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		PImage blurred = BlurFilter.blur(img, blurSize, null);
@@ -93,7 +95,9 @@ public class AutoBalance {
 				toReturn.setCol(x, y, new RGB(R,G,B));
 			}
 
-				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/img.width() , 99.99), toClient );
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (x*100.0)/img.width() , 99.99)) );
+			
 		}
 		return toReturn;
 	}

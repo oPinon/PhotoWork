@@ -1,4 +1,4 @@
-package network;
+package imageComputing;
 
 import java.awt.image.BufferedImage;
 import java.io.DataOutputStream;
@@ -11,11 +11,11 @@ import javax.imageio.ImageIO;
  *   
  */
 public class Result {
-	private BufferedImage result; // si progress n'est pas à 100, devrait etre null.
+	private BufferedImage result; // si progress n'est pas 100, devrait etre VOID_IMAGE.
 	private int imageNumber;
 	private double progress; // en pourcentage
 	
-	private static BufferedImage VOID_IMAGE = new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB);
+	public static BufferedImage VOID_IMAGE = new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB);
 
 	public Result(BufferedImage result, int imageNumber, double progress) {
 		this.result = result;
@@ -36,16 +36,11 @@ public class Result {
 	/**
 	 * Envoie les donnees d'un Result dans un outputStream.
 	 * 
-	 * @param result
-	 * @param imageNumber
-	 * @param progress
-	 * @param toClient S'il vaut null, la methode quitte immediatement sans rien faire
+	 * @param toClient
 	 * @throws IOException
 	 */
-	public static void sendDataToStream(BufferedImage result, int imageNumber, double progress, DataOutputStream toClient) throws IOException{
-		if(toClient == null) return;
-		if(result == null) ImageIO.write(VOID_IMAGE, "png", toClient);
-		else ImageIO.write(result, "png", toClient);
+	public void sendToStream(DataOutputStream toClient) throws IOException{
+		ImageIO.write(result, "png", toClient);
 		toClient.writeInt(imageNumber);
 		toClient.writeDouble(progress);
 	}

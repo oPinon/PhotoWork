@@ -65,8 +65,8 @@ public class Sketch {
 		updateImage();
 	}
 
-	public BufferedImage render(int scale) {
-		BufferedImage img = new BufferedImage(width*scale,height*scale,BufferedImage.TYPE_INT_RGB);
+	public BufferedImage render(double scale) {
+		BufferedImage img = new BufferedImage((int)(width*scale),(int)(height*scale),BufferedImage.TYPE_INT_RGB);
 		Graphics g = img.getGraphics();
 		paint(g,scale);
 		return img;
@@ -81,7 +81,7 @@ public class Sketch {
 		paint(g);
 	}
 
-	public void paint(Graphics g, int scale) {
+	public void paint(Graphics g, double scale) {
 		g.setColor(Color.black);
 		g.fillRect(0, 0, width, height);
 		for(int i=0;i<triPop;i++) { 

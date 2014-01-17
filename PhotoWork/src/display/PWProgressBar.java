@@ -53,8 +53,6 @@ public class PWProgressBar {
 		this.progress = percentage;
 		lastChangeTime  = System.currentTimeMillis();
 		bar.setSelection((int) progress);
-
-		//System.out.println((int)getProgress()+"% done ; "+getRemainingTime()+" remaining...");
 	}
 
 	public double getProgress() {
@@ -62,7 +60,7 @@ public class PWProgressBar {
 	}
 
 	public String getRemainingTime() {
-		if(speed!=0) {
+		if(speed>0) {
 			return (int)((100-progress)/speed) + " s";
 		}
 		return "?? s";

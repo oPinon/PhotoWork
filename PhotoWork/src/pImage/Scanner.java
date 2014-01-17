@@ -1,16 +1,12 @@
 package pImage;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import network.Result;
 import filter.AutoBalance;
+import imageComputing.Buffer;
+import imageComputing.Result;
 
 public class Scanner{
 
-	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads, DataOutputStream toClient) throws IOException {
-		long t0 = System.currentTimeMillis();
-
+	public static PImage scan(PImage input, int[] x, int[] y, int format, int nbThreads, Buffer<Result> streamBuffer) throws InterruptedException {
 		int outputHeight;
 		int outputWidth;
 
@@ -25,16 +21,16 @@ public class Scanner{
 		default: outputHeight= 210 ; outputWidth= 297 ;
 		}
 
-		PImage transformed = Scanner.transform(input,x,y,outputHeight*4,outputWidth*4, toClient);
+		PImage transformed = Scanner.transform(input,x,y,outputHeight,outputWidth, streamBuffer);
 
 		transformed = AutoBalance.balance(transformed, nbThreads, null);
 
-	//	System.out.println("Done in "+(System.currentTimeMillis()-t0)+" ms.");
 		return transformed;
 
 	}
 
-	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height, DataOutputStream toClient) throws IOException { // x and y are int[4] and M1 M2 M4 M3 are clockwise points
+	static PImage transform(PImage img, int[] x5, int[] y5, int width, int height, Buffer<Result> streamBuffer) throws InterruptedException {
+		// x and y are int[4] and M1 M2 M4 M3 are clockwise points
 		double x1 = x5[0]; double x2 = x5[1]; double x3 = x5[2]; double x4 = x5[3];
 		double y1 = y5[0]; double y2 = y5[1]; double y3 = y5[2]; double y4 = y5[3];
 
@@ -57,7 +53,8 @@ public class Scanner{
 				toReturn.setCol(i, j, bilinear(img,X,Y));
 			}
 
-			Result.sendDataToStream(null, 0, Math.min( (i*100.0)/img.width() , 99.99), toClient );
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (i*100.0)/img.width() , 99.99)) );
 
 		}
 		return toReturn;

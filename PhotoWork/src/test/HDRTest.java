@@ -10,7 +10,7 @@ import pImage.PImage;
 
 public class HDRTest {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		BufferedImage originalSource = ImageIO.read(new File("hdr.png"));
 

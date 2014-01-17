@@ -1,37 +1,34 @@
-package network;
+package imageComputing;
 
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.imageio.ImageIO;
 
+import display.DisplayUpdater;
+
 /**
- * Le client envoie des Task a un serveur particulier, et convertit ce qu'il recoit en Result.
+ * Le NetworkClient envoie des Task a un serveur particulier, et convertit ce qu'il recoit en Result.
  *
  */
-public class Client extends Thread implements UpdaterClient{
+public class NetworkClient extends Thread implements Client{
 
-	protected String ip;
-	protected Socket socket;
+	private String ip;
+	private Socket socket;
 
-	protected DataOutputStream toServer;
-	protected DataInputStream fromServer;	
+	private DataOutputStream toServer;
+	private DataInputStream fromServer;	
 
-	protected Buffer<Task> tasksToDo;
-	protected Buffer<Result> tasksDone;
+	private Buffer<Task> tasksToDo;
+	private Buffer<Result> tasksDone;
 
-	public static AtomicInteger tasksCompleted;
-
-	public Client(String ip, Buffer<Task> tasksToDo, Buffer<Result> tasksDone) {
+	public NetworkClient(String ip, Buffer<Task> tasksToDo, Buffer<Result> tasksDone) {
 		this.tasksToDo = tasksToDo;
 		this.tasksDone = tasksDone;	
 		this.ip = ip;
 
-		tasksCompleted = new AtomicInteger(0);
 		System.out.println("client "+ip+": client cree");	
 	}
 
@@ -41,17 +38,18 @@ public class Client extends Thread implements UpdaterClient{
 				sendImage();
 				receiveImage();
 			} catch (IOException | InterruptedException e) {
+				System.out.println("client "+ip+": fin de connection");
 				break;
 			}
 		}
-		System.out.println("client "+ip+": fin de connection");
-		terminate();
+		endConnection();
 	}
 
 	public void sendImage() throws IOException, InterruptedException{
 		Task toSend = tasksToDo.take();
 		newConnection();	
 		toSend.sendToStream(toServer);
+
 
 		System.out.println("client "+ip+": image "+(toSend.getImageNumber()+1)+" envoyee");
 	}
@@ -63,6 +61,7 @@ public class Client extends Thread implements UpdaterClient{
 
 		do{
 			output = ImageIO.read(fromServer);
+
 			fromServer.skip(16); //on saute deux octets a la fin de l'image, dus au format png
 			imageNumber = fromServer.readInt();
 			progress = fromServer.readDouble();
@@ -70,11 +69,12 @@ public class Client extends Thread implements UpdaterClient{
 		}
 		while(progress != 100);  //image en cours de traitement
 
-		tasksCompleted.getAndIncrement();
+
+		DisplayUpdater.incrementTasks();
 		System.out.println("client "+ip+": image "+(imageNumber+1)+" recue");
 	}
 
-	public void newConnection() {
+	public void newConnection(){
 		try {
 			socket = new Socket(ip, 6789);
 			fromServer = new DataInputStream(socket.getInputStream());
@@ -85,9 +85,9 @@ public class Client extends Thread implements UpdaterClient{
 		}
 	}
 
-	public void terminate(){
+	public void endConnection(){
 		try {
-			if(socket !=null) socket.close();
+			if(socket != null) socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

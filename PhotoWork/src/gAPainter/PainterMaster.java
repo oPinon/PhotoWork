@@ -1,19 +1,19 @@
 package gAPainter;
 
+import imageComputing.Buffer;
+import imageComputing.Client;
+import imageComputing.Result;
+import imageComputing.Task;
+
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import network.Buffer;
-import network.Client;
-import network.Result;
-import network.Task;
-import network.UpdaterClient;
+import display.GUI;
 
-public class PainterMaster extends Thread implements UpdaterClient{
+public class PainterMaster extends Thread implements Client{
 
 	private String[] IPList;
 	private Socket[] sockets;
@@ -28,6 +28,7 @@ public class PainterMaster extends Thread implements UpdaterClient{
 	Sketch bestSketch;
 
 	private int imageNumber;
+	private double renderRatio = 1;
 
 	public PainterMaster(String[] IPList, Buffer<Task> tasksToDo, Buffer<Result> tasksDone) {
 		this.tasksToDo = tasksToDo;
@@ -38,13 +39,12 @@ public class PainterMaster extends Thread implements UpdaterClient{
 		outputs = new DataOutputStream[IPList.length];
 		inputs = new DataInputStream[IPList.length];	
 
-		Client.tasksCompleted = new AtomicInteger(0);
 		System.out.println("PainterMaster cree");
 	}
 
 
-	public BufferedImage getImage() {
-		if(bestSketch != null) return bestSketch.getIm();
+	public BufferedImage getImage(double scale) {
+		if(bestSketch != null) return bestSketch.render(scale);
 		else return null;
 	}
 
@@ -59,14 +59,13 @@ public class PainterMaster extends Thread implements UpdaterClient{
 			}
 		} catch (IOException | InterruptedException e) {}
 		System.out.println("PainterMaster: fin de connection");
-		terminate();
+		endConnection();
 	}
 
 
 	public void newConnection() throws IOException, InterruptedException {
 		Task toSend = tasksToDo.take();
 		imageNumber = toSend.getImageNumber();
-
 
 		for(int i=0;i<IPList.length;i++){
 			sockets[i] = new Socket(IPList[i], 6789);
@@ -80,8 +79,8 @@ public class PainterMaster extends Thread implements UpdaterClient{
 		for(int i=0;i<sockets.length;i++) {
 			long slaveFitness = inputs[i].readLong();
 			outputs[i].writeLong(bestFitness);
-	
-			if(slaveFitness<bestFitness) {      
+
+			if(slaveFitness<bestFitness) {  
 				bestFitness = slaveFitness;
 				bestSketch = new Sketch(inputs[i]); 
 			}
@@ -92,16 +91,20 @@ public class PainterMaster extends Thread implements UpdaterClient{
 	}
 
 	public void receiveImage() throws InterruptedException{
-		BufferedImage output = getImage();
+		renderRatio = GUI.getZoomRatio()*renderRatio;
+		BufferedImage output = getImage(renderRatio);
+
 		if(output != null){
 			Result r = new Result(output, imageNumber, getFitness());
 			tasksDone.put(r);
 		}
 	}
 
-	public void terminate(){
+	public void endConnection(){
 		try {
-			if(sockets !=null) for(Socket s: sockets) s.close();
+			if(sockets != null) {
+				for(Socket s: sockets) s.close();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

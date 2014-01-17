@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 
 public class FourierTest {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		
 		//loads Image from file
 		BufferedImage originalSource = ImageIO.read(new File("monaRaw.png"));

@@ -1,16 +1,20 @@
 /**
  * 
  */
-package network;
+package imageComputing;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
 /**
- * Représente un tampon de taches entre DisplayUpdater et les clients, en suivant un modèle producteur/consommateur.
+ * Represente un tampon de Tasks ou de Result entre DisplayUpdater et les Clients, (tasksToDo et tasksDone)
+ * en suivant un modele de type producteur/consommateur.
  *
- * @param <T> soit une tâche à accomplir (Task), soit une tâche accomplie (Result)
+ * Est aussi utilise pour recuperer la progression de traitements en cours, et est dans ce cas la un tampon
+ * de Result entre le ComputationThread et le Client (streamBuffer, par analogie aux OutputStreams).
+ * 
+ * @param <T> soit une tache a accomplir (Task), soit une tache accomplie (Result)
  */
 public class Buffer<T> {
 
@@ -22,6 +26,8 @@ public class Buffer<T> {
 
 	private Semaphore nbMess = new Semaphore(0);
 
+	private boolean isClosed;  
+	// utilise par le client local pour forcer le Timer de rafraichissement du GAPainter a se finir 
 
 	public Buffer()
 	{
@@ -30,6 +36,7 @@ public class Buffer<T> {
 
 	public void put(T message) throws InterruptedException
 	{
+		if(isClosed) throw new InterruptedException();
 		mutexProd.acquire();
 		tampon.add(message);
 		nbMess.release();
@@ -46,5 +53,8 @@ public class Buffer<T> {
 		return message;
 	}
 
+	public void close(){
+		isClosed = true;
+	}
 
 }

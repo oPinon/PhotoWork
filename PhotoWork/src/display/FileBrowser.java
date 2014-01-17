@@ -4,7 +4,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 
 /**
- * Explorateur de fichier, permettant d'en charger et d'en sauvegarder plusieurs à la fois.
+ * Explorateur de fichier, permettant d'en charger et d'en sauvegarder plusieurs ï¿½ la fois.
  *
  */
 public class FileBrowser {
@@ -31,8 +31,8 @@ public class FileBrowser {
 	private void load() {
 
 		FileDialog dialog = new FileDialog(shell, SWT.MULTI);
-		dialog.setFilterNames(new String[] { "PNG", "JPG", "GIF", "All Files (*.*)" });
-		dialog.setFilterExtensions(new String[] { "*.png", "*.jpg", "*.gif", "*.*" }); 
+		dialog.setFilterNames(new String[] { "All Files (*.*)", "PNG", "JPG", "GIF" });
+		dialog.setFilterExtensions(new String[] { "*.*", "*.png", "*.jpg", "*.gif" }); 
 
 		String path = dialog.open();
 		if (path != null) {
@@ -59,19 +59,19 @@ public class FileBrowser {
 
 	private void save() {
 		FileDialog dialog = new FileDialog(shell, SWT.SAVE);
-		dialog.setFilterNames(new String[] { "PNG", "JPEG", "GIF", "All Files (*.*)" });
-		dialog.setFilterExtensions(new String[] { "*.png", "*.jpeg", "*.gif", "*.*" }); 
+		dialog.setFilterNames(new String[] { "PNG", "JPG", "GIF" });
+		dialog.setFilterExtensions(new String[] { "*.png", "*.jpg", "*.gif" }); 
 
 		dialog.setFileName("result");
 
 		String path = dialog.open();
-		chosenFiles= new String[]{path};
+		chosenFiles = new String[]{path};
 
-		switch(dialog.getFileName()){
-		case "PNG": extension= SWT.IMAGE_PNG ;break;
-		case "GIF": extension= SWT.IMAGE_GIF ;break;
-		case "JPEG": extension= SWT.IMAGE_JPEG ;break;
-		default: extension= SWT.IMAGE_PNG ;break;
+		switch(dialog.getFilterIndex()){
+		case 0: extension= SWT.IMAGE_PNG ;break;
+		case 1: extension= SWT.IMAGE_GIF ;break;
+		case 2: extension= SWT.IMAGE_JPEG ;break;
+		default: extension= 0 ;break;
 		}
 
 		shell.dispose();

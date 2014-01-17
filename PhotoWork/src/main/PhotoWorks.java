@@ -1,6 +1,6 @@
 package main;
 
-public class PhotoWork {
+public class PhotoWorks {
 
 	public static void main(String[] args) {
 		display.GUI.createGUI();

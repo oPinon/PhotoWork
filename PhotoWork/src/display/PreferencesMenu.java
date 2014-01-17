@@ -28,7 +28,8 @@ import org.eclipse.wb.swt.SWTResourceManager;
  *
  */
 public class PreferencesMenu extends Composite {
-	static final int AVAILABLE_THREADS= Runtime.getRuntime().availableProcessors();
+	static final int AVAILABLE_THREADS = Runtime.getRuntime().availableProcessors();
+	
 	GUI g;
 
 	List fileList, serverList;

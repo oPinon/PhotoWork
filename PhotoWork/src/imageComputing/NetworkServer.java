@@ -1,25 +1,24 @@
-package network;
+package imageComputing;
 
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 
 /**
- * Le serveur reçoit les demandes de traitement émanant des clients des ordinateurs utilisant l'application.
+ * Le serveur recoit les demandes de traitement emanant des clients des ordinateurs utilisant l'application.
  *
  */
-public class Server extends Thread{
+public class NetworkServer extends Thread{
 
 	private static ServerSocket socket;
 
-	public Server() throws BindException {
+	public NetworkServer() throws BindException {
 		try {
 			socket = new ServerSocket(6789);
-			System.out.println("serveur: création sur cet ordinateur");
+			System.out.println("serveur: creation sur cet ordinateur");
 		} catch (BindException e) {
 			throw e;
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -27,7 +26,7 @@ public class Server extends Thread{
 	public void run(){
 		while(true){
 			try {
-				new ComputationThread(socket.accept()).start();
+				new NetworkComputationThread(socket.accept()).start();
 			} catch (IOException e) {
 				System.out.println("serveur: fin de connection");
 				return;
@@ -35,7 +34,7 @@ public class Server extends Thread{
 		}
 	}
 
-	public void terminate(){
+	public void closeSocket(){
 		try {
 			socket.close();
 		} catch (IOException e) {

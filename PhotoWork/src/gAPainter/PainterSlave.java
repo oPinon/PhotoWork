@@ -23,17 +23,18 @@ public class PainterSlave implements ActionListener {
 		outputStream = new DataOutputStream(masterSocket.getOutputStream());
 
 		painter = new Painter(sourceImg,cirPop,triPop);
-		painter.start(); // painter is the computation thread while PainterSlave is the network thread
+		painter.start(); // painter is the computation thread while PainterSlave is the imageComputing thread
 		t = new Timer(1000,this);
 		t.start();
+		System.out.println("PainterSlave: creation");
 	}
 
 	public long getFitness() {
 		return painter.getFitness();
 	}
 
-	public BufferedImage getImage() {
-		return painter.getSketch().getIm();
+	public BufferedImage getImage(double scale) {
+		return painter.getSketch().render(scale);
 	}
 
 	/*

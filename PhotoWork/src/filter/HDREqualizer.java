@@ -1,9 +1,7 @@
 package filter;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import network.Result;
+import imageComputing.Buffer;
+import imageComputing.Result;
 import pImage.PImage;
 import pImage.RGB;
 
@@ -12,11 +10,8 @@ public class HDREqualizer {
 	/*
 	 *  uses Algo : http://en.wikipedia.org/wiki/Adaptive_histogram_equalization
 	 */
-	public static PImage filter(PImage image, int size, DataOutputStream toClient) throws IOException {
-		//long t0 = System.currentTimeMillis();
+	public static PImage filter(PImage image, int size, Buffer<Result> streamBuffer) throws InterruptedException {
 		PImage expanded = BlurFilter.expand(image,size);
-		//System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
-		//t0 = System.currentTimeMillis();
 		PImage toReturn = new PImage(expanded.width(),expanded.height());
 
 		int n = (2*size+1)*(2*size+1);
@@ -40,22 +35,18 @@ public class HDREqualizer {
 				toReturn.setCol(x, y, new RGB((R)/n,(G)/n,(B)/n));
 			}
 
-			Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (x*100.0)/image.width() , 99.99)) );
 
 		}
-		//System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
 		return BlurFilter.cut(toReturn,size);
 	}
 
 	/*
 	 * Works really great for generating bas-relief from depth-map
 	 */
-	public static PImage filter2(PImage image, int size, DataOutputStream toClient) throws IOException {
-
-		//long t0 = System.currentTimeMillis();
+	public static PImage filter2(PImage image, int size, Buffer<Result> streamBuffer) throws InterruptedException {
 		PImage expanded = BlurFilter.expand(image,size);
-		//System.out.println("Expanded in "+(System.currentTimeMillis()-t0)+" ms.");
-		//t0 = System.currentTimeMillis();
 		PImage toReturn = new PImage(expanded.width(),expanded.height());
 
 		int n = (2*size+1)*(2*size+1);
@@ -79,10 +70,10 @@ public class HDREqualizer {
 				toReturn.setCol(x, y, new RGB((R*255)/n,(G*255)/n,(B*255)/n));
 			}
 
-				Result.sendDataToStream(null, 0, Math.min( (x*100.0)/image.width() , 99.99), toClient );
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (x*100.0)/image.width() , 99.99)) );
 
 		}
-		//System.out.println("Blurred in "+(System.currentTimeMillis()-t0)+" ms.");
 		return BlurFilter.cut(toReturn,size);
 	}
 

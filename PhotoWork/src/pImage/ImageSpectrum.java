@@ -1,9 +1,7 @@
 package pImage;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import network.Result;
+import imageComputing.Buffer;
+import imageComputing.Result;
 
 public class ImageSpectrum {
 
@@ -12,7 +10,7 @@ public class ImageSpectrum {
 	private Spectrum BSpectrum;
 	private int width, height;
 
-	public ImageSpectrum(PImage source, DataOutputStream toClient) throws IOException {
+	public ImageSpectrum(PImage source, Buffer<Result> streamBuffer) throws InterruptedException {
 		this.width=source.width(); this.height=source.height();
 		RSpectrum = new Spectrum(width,height);
 		GSpectrum = new Spectrum(width,height);
@@ -36,7 +34,10 @@ public class ImageSpectrum {
 				GSpectrum.setComplex(fx, fy, G);
 				BSpectrum.setComplex(fx, fy, B);
 			}
-				Result.sendDataToStream(null, 0, Math.min( (fx*100.0)/source.width() , 99.99), toClient );
+
+			if(streamBuffer != null) 
+				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (fx*100.0)/source.width() , 99.99)) );
+
 		}
 	}
 
@@ -48,15 +49,15 @@ public class ImageSpectrum {
 				double r= (RSpectrum.getComplex(fx, fy).getAbs())*(255.0/max);
 				double g= (GSpectrum.getComplex(fx, fy).getAbs())*(255.0/max);
 				double b= (BSpectrum.getComplex(fx, fy).getAbs())*(255.0/max);
-				
+
 				if(logScaling){
-				//filtre log
-				double c= 255.0/Math.log10(1+max);
-				r=c*Math.log10(1+r);
-				g=c*Math.log10(1+g);
-				b=c*Math.log10(1+b);
+					//filtre log
+					double c= 255.0/Math.log10(1+max);
+					r=c*Math.log10(1+r);
+					g=c*Math.log10(1+g);
+					b=c*Math.log10(1+b);
 				}
-				
+
 				PColor col = new RGB((int)r,(int)g,(int)b);
 				img.setCol(fx, fy, col);
 			}
@@ -105,7 +106,7 @@ public class ImageSpectrum {
 		}
 		return img;
 	}
-	
+
 	public void highPassFilter(int cutFrequency){
 		int f = cutFrequency; // the width of the part we remove in the spectrum
 		for(int x = -f; x <= f; x++){
@@ -121,7 +122,7 @@ public class ImageSpectrum {
 			}
 		}
 	}
-	
+
 	public Spectrum getRSpectrum() { return RSpectrum; }
 	public Spectrum getGSpectrum() { return GSpectrum; }
 	public Spectrum getBSpectrum() { return BSpectrum; }

@@ -1,12 +1,12 @@
-package network;
+package imageComputing;
 
 import java.io.IOException;
 
-public interface UpdaterClient {
+public interface Client {
 	void sendImage() throws IOException, InterruptedException;
 	void receiveImage() throws IOException, InterruptedException;
 	void newConnection() throws IOException, InterruptedException;
-	void terminate();
+	void endConnection();
 	void interrupt();
 }
 
