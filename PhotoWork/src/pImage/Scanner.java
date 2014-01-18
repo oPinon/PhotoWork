@@ -53,8 +53,9 @@ public class Scanner{
 				toReturn.setCol(i, j, bilinear(img,X,Y));
 			}
 
-			if(streamBuffer != null) 
-				streamBuffer.put( new Result(Result.VOID_IMAGE, 0, Math.min( (i*100.0)/img.width() , 99.99)) );
+			if(streamBuffer != null) {
+				Result r = new Result(Result.VOID_IMAGE, 0, Math.min( (i*100.0)/img.width() , 99.99));
+				streamBuffer.put(r );}
 
 		}
 		return toReturn;

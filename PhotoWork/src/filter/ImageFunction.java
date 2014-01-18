@@ -1,9 +1,8 @@
 package filter;
 
 /**
- * Enumeration des différentes fonctions de l'application. Indique aussi si elles peuvent s'appliquer a plusieurs images
+ * Enumeration des differentes fonctions de l'application. Indique aussi si elles peuvent s'appliquer a plusieurs images
  * en meme temps.
- * 
  *
  */
 public enum ImageFunction {
@@ -28,17 +27,5 @@ public enum ImageFunction {
 
 	public boolean isApplicableOnAllFiles() {
 		return applicableOnAllFiles;
-	}
-
-	public static ImageFunction fromName(String name){
-		switch(name){
-		case "AUTO_BALANCE": 	  case "Auto Balance": 		 return AUTO_BALANCE;
-		case "BLUR":              case "Blur":		   	 	 return BLUR;
-		case "HDR_EQUALIZER": 	  case "HDR Equalizer": 	 return HDR_EQUALIZER;
-		case "FOURIER_TRANSFORM": case "Fourier Transform":  return FOURIER_TRANSFORM;
-		case "SCAN":  		 	  case "Scan":				 return SCAN;
-		case "GA_PAINTER":	 	  case "GA Painter":   		 return GA_PAINTER;
-		default: 								   			 return null;
-		}
 	}
 }

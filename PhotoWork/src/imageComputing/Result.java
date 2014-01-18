@@ -11,24 +11,26 @@ import javax.imageio.ImageIO;
  *   
  */
 public class Result {
-	private BufferedImage result; // si progress n'est pas 100, devrait etre VOID_IMAGE.
+	private BufferedImage image; // si progress n'est pas 100, devrait etre VOID_IMAGE.
 	private int imageNumber;
 	private double progress; // en pourcentage
 	
-	public static BufferedImage VOID_IMAGE = new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB);
+	public static BufferedImage VOID_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
 
-	public Result(BufferedImage result, int imageNumber, double progress) {
-		this.result = result;
+	public Result(BufferedImage image, int imageNumber, double progress) {
+		this.image = image;
 		this.imageNumber = imageNumber;
 		this.progress = progress;
 	}
 
-	public BufferedImage getResult() {
-		return result;
+	public BufferedImage getImage() {
+		return image;
 	}
+	
 	public int getImageNumber() {
 		return imageNumber;
 	}
+	
 	public double getProgress() {
 		return progress;
 	}
@@ -40,7 +42,7 @@ public class Result {
 	 * @throws IOException
 	 */
 	public void sendToStream(DataOutputStream toClient) throws IOException{
-		ImageIO.write(result, "png", toClient);
+		ImageIO.write(image, "png", toClient);
 		toClient.writeInt(imageNumber);
 		toClient.writeDouble(progress);
 	}

@@ -35,6 +35,7 @@ public class PWProgressBar {
 				int height = fontMetrics.getHeight();
 				e.gc.setForeground(parent.getDisplay().getSystemColor(SWT.COLOR_BLACK));
 				e.gc.drawString(string, (point.x-width)/2 , (point.y-height)/2, true);
+				
 			}
 		});
 

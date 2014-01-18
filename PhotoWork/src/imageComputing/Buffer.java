@@ -3,8 +3,8 @@
  */
 package imageComputing;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -18,7 +18,7 @@ import java.util.concurrent.Semaphore;
  */
 public class Buffer<T> {
 
-	private List<T> tampon;
+	private BlockingQueue<T> tampon;
 
 	// exclusion 
 	private Semaphore mutexProd = new Semaphore(1);
@@ -26,28 +26,28 @@ public class Buffer<T> {
 
 	private Semaphore nbMess = new Semaphore(0);
 
-	private boolean isClosed;  
+	private boolean isClosed;
 	// utilise par le client local pour forcer le Timer de rafraichissement du GAPainter a se finir 
 
 	public Buffer()
 	{
-		tampon = new ArrayList<T>();
+		tampon = new LinkedBlockingQueue<T>();
 	}
 
 	public void put(T message) throws InterruptedException
 	{
 		if(isClosed) throw new InterruptedException();
 		mutexProd.acquire();
-		tampon.add(message);
-		nbMess.release();
+		tampon.offer(message);
 		mutexProd.release();
+		nbMess.release();
 	}
 
 	public T take() throws InterruptedException
 	{
-		mutexCons.acquire();
 		nbMess.acquire();
-		T message = tampon.remove(0);
+		mutexCons.acquire();
+		T message= tampon.poll();
 		mutexCons.release();
 
 		return message;

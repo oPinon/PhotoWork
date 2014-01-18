@@ -70,6 +70,8 @@ public class GUI extends Composite  {
 
 	//Boutons particuliers
 	Button btnApply;
+	Button btnClearScan; //Scan
+	private Text scanULx, scanULy, scanURx, scanURy, scanLLx, scanLLy, scanLRx, scanLRy;
 	Button btnStop;	//GA Painter
 
 	//Barres de progression
@@ -90,7 +92,8 @@ public class GUI extends Composite  {
 	ImageFunction selectedFunction;
 
 	//Fonctions de filtre (Auto Balance, Blur, HDR)
-	int autoBalanceType, blurSize, HDRAlgorithm; //Type d'autobalance: 0:simple, 1:equilibrage couleurs, 2: equilibrage avec flou
+	int autoBalanceType, blurSize, HDRAlgorithm; 
+	//Type d'autobalance: 0:simple, 1:equilibrage couleurs, 2: equilibrage avec flou
 
 	//DFT
 	int DFTMode, scaleMethod, cutFrequency;
@@ -108,8 +111,8 @@ public class GUI extends Composite  {
 	boolean workOnAllFiles = true;
 	int nbThreads = PreferencesMenu.AVAILABLE_THREADS;
 	String[] IPList;
-	
-	
+
+
 	//Couleurs
 	static final int FUNCTION_COLOR = SWT.COLOR_WHITE;
 	static final int HELP_COLOR = SWT.COLOR_WHITE;
@@ -162,11 +165,10 @@ public class GUI extends Composite  {
 					return;
 				}
 
-				if(workOnAllFiles){
-					for(int i=0; i<savedImages.length; i++) savedImages[i]= new Image(display, originalImages[i], SWT.IMAGE_COPY);	
-				}
-				else savedImages[selectedImageNumber]= new Image(display, originalImages[selectedImageNumber], SWT.IMAGE_COPY);
+				for(int i=0; i<savedImages.length; i++)
+					savedImages[i]= new Image(display, originalImages[i], SWT.IMAGE_COPY);	
 				refreshDisplay();
+				if(selectedFunction == ImageFunction.SCAN) clearScan(); 	//force un reinit du scan
 			}
 		});
 
@@ -187,8 +189,16 @@ public class GUI extends Composite  {
 				FileBrowser browser = new FileBrowser(display, SWT.OPEN);
 				if(browser.chosenFiles != null){
 					fileNames = browser.chosenFiles;
+
+					if(savedImages != null){  //liberation ressources
+						for(int i=0; i< savedImages.length; i++){
+							savedImages[i].dispose();
+							originalImages[i].dispose();
+						}
+					}
+
 					savedImages = new Image[fileNames.length];
-					originalImages= new Image[fileNames.length];
+					originalImages = new Image[fileNames.length];
 					for(int i=0; i< fileNames.length; i++){
 						savedImages[i] = new Image(display, fileNames[i]);
 						originalImages[i] = new Image(display, fileNames[i]);
@@ -216,12 +226,13 @@ public class GUI extends Composite  {
 				}
 				FileBrowser browser= new FileBrowser(display, SWT.SAVE);
 
-				if(browser.chosenFiles != null && browser.extension != 0){
+				if(browser.chosenFiles[0] != null){
+					System.out.println(browser.chosenFiles[0]);
 					String name= browser.chosenFiles[0];
 					ImageLoader loader = new ImageLoader();
 
-					if(!workOnAllFiles || savedImages.length==1){
-						loader.data = new ImageData[] {savedImages[selectedImageNumber].getImageData()};
+					if(savedImages.length == 1){  
+						loader.data = new ImageData[] {savedImages[0].getImageData()};
 						loader.save(name, browser.extension);
 					}
 					else
@@ -454,7 +465,7 @@ public class GUI extends Composite  {
 		optionsMenu.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		optionsMenu.setBackground(SWTResourceManager.getColor(MENU_COLOR));
 		optionsMenu.setText("Welcome !");
-		
+
 		optionsGroup = new Group(optionsMenu, SWT.FILL);
 		optionsGroup.setVisible(false);
 
@@ -505,7 +516,7 @@ public class GUI extends Composite  {
 	/**
 	 *  Cree un menu d'options dependant de la fonction choisie.
 	 */
-	void createOptionsMenu(){
+	private void createOptionsMenu(){
 		if(image == null){ 
 			showWarningMessage("Please select a file to work on");
 			return;
@@ -550,7 +561,7 @@ public class GUI extends Composite  {
 
 			Label lblNewLabel = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel.setText("Blur Size (px):");
-			
+
 			final Spinner size = new Spinner(optionsGroup, SWT.BORDER);
 			size.setSelection(blurSize);
 			size.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
@@ -591,12 +602,12 @@ public class GUI extends Composite  {
 		case BLUR:
 			optionsGroup.setLayout(new GridLayout(1, true));
 			optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-			
+
 			blurSize = 10;
 
 			Label lblNewLabel1 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel1.setText("Blur Size (px):");
-			
+
 			final Spinner size2 = new Spinner(optionsGroup, SWT.BORDER);
 			size2.setMaximum(1000);
 			size2.setSelection(blurSize);
@@ -611,13 +622,13 @@ public class GUI extends Composite  {
 		case HDR_EQUALIZER:
 			optionsGroup.setLayout(new GridLayout(1, true));
 			optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-			
+
 			blurSize = 30;
 			HDRAlgorithm = 1;
 
 			Label lblNewLabel2 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel2.setText("Size (px):");
-			
+
 			final Spinner size3 = new Spinner(optionsGroup, SWT.BORDER);	
 			size3.setSelection(blurSize);
 			size3.setMaximum(1000);
@@ -644,7 +655,7 @@ public class GUI extends Composite  {
 		case FOURIER_TRANSFORM:
 			optionsGroup.setLayout(new GridLayout(1, true));
 			optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-			
+
 			DFTMode = 0;
 			scaleMethod = 1;
 			cutFrequency = 8;
@@ -682,7 +693,7 @@ public class GUI extends Composite  {
 
 			Label lblNewLabel24 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel24.setText("Cutoff frequency");
-			
+
 			final Spinner cutoff = new Spinner(optionsGroup, SWT.BORDER);
 			cutoff.setEnabled(false);
 			cutoff.setSelection(cutFrequency);
@@ -706,8 +717,9 @@ public class GUI extends Composite  {
 		case SCAN:
 			optionsGroup.setLayout(new GridLayout(2, true));
 			optionsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-			
+
 			btnApply.setEnabled(false);
+			scanFormat = 4;
 
 			Label lblNewLabel3 = new Label(optionsGroup, SWT.NONE);	
 			lblNewLabel3.setText("Select image points");		
@@ -716,45 +728,40 @@ public class GUI extends Composite  {
 			Label lblNewLabel31 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel31.setText("Point 1: Upper Left");
 			new Label(optionsGroup, SWT.NONE);
-			final Text lblNewLabel32 = new Text(optionsGroup, SWT.NONE); lblNewLabel32.setEditable(false);
-			final Text lblNewLabel33 = new Text(optionsGroup, SWT.NONE); lblNewLabel33.setEditable(false);
+			scanULx = new Text(optionsGroup, SWT.NONE); scanULx.setEditable(false);
+			scanULy = new Text(optionsGroup, SWT.NONE); scanULy.setEditable(false);
 
 			Label lblNewLabel41 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel41.setText("Point 2: Upper Right");	
 			new Label(optionsGroup, SWT.NONE);
-			final Text lblNewLabel42 = new Text(optionsGroup, SWT.NONE); lblNewLabel42.setEditable(false);
-			final Text lblNewLabel43 = new Text(optionsGroup, SWT.NONE); lblNewLabel43.setEditable(false);
+			scanURx = new Text(optionsGroup, SWT.NONE); scanURx.setEditable(false);
+			scanURy = new Text(optionsGroup, SWT.NONE); scanURy.setEditable(false);
 
 			Label lblNewLabel51 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel51.setText("Point 3: Lower Left");
 			new Label(optionsGroup, SWT.NONE);
-			final Text lblNewLabel52 = new Text(optionsGroup, SWT.NONE); lblNewLabel52.setEditable(false);
-			final Text lblNewLabel53 = new Text(optionsGroup, SWT.NONE); lblNewLabel53.setEditable(false);
+			scanLLx = new Text(optionsGroup, SWT.NONE); scanLLx.setEditable(false);
+			scanLLy = new Text(optionsGroup, SWT.NONE); scanLLy.setEditable(false);
 
 			Label lblNewLabel61 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel61.setText("Point 4: Lower Right");
 			new Label(optionsGroup, SWT.NONE);
-			final Text lblNewLabel62 = new Text(optionsGroup, SWT.NONE); lblNewLabel62.setEditable(false);
-			final Text lblNewLabel63 = new Text(optionsGroup, SWT.NONE); lblNewLabel63.setEditable(false);
+			scanLRx = new Text(optionsGroup, SWT.NONE); scanLRx.setEditable(false);
+			scanLRy = new Text(optionsGroup, SWT.NONE); scanLRy.setEditable(false);
 
-			Button btnClear = new Button(optionsGroup, SWT.NONE);
-			btnClear.addSelectionListener(new SelectionAdapter() {
+			btnClearScan = new Button(optionsGroup, SWT.NONE);
+			btnClearScan.addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent arg0) {
-					refreshDisplay();
-					lblNewLabel32.setText("");lblNewLabel33.setText("");
-					lblNewLabel42.setText("");lblNewLabel43.setText("");
-					lblNewLabel52.setText("");lblNewLabel53.setText("");
-					lblNewLabel62.setText("");lblNewLabel63.setText("");
-					btnApply.setEnabled(false);
+					clearScan();
 				}
 			});
-			btnClear.setText("Clear");		
+			btnClearScan.setText("Clear");		
 			new Label(optionsGroup, SWT.NONE);
 
 			final List format = new List(optionsGroup, SWT.V_SCROLL);
 			format.setItems(new String[] {"A0 (841*1189)", "A1 (594*841)", "A2 (420*594)", "A3 (297*420)",
 					"A4 (210*297)", "A5 (148*210)", "A6 (105*148)"});
-			format.setSelection(4);
+			format.setSelection(scanFormat);
 			format.addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent arg0) {
 					scanFormat = format.getSelectionIndex();
@@ -763,40 +770,40 @@ public class GUI extends Composite  {
 
 			imageFrame.addMouseListener(new MouseAdapter() {
 				public void mouseDown(MouseEvent arg0) {
-					if(gc == null || gc.isDisposed()) gc= new GC(imageFrame);
+					if(gc == null || gc.isDisposed()) gc = new GC(imageFrame);
 					gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
-					gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
-					int x= (int) Math.min(savedImages[selectedImageNumber].getBounds().width-1, arg0.x/zoomRatio);
-					int y= (int) Math.min(savedImages[selectedImageNumber].getBounds().height-1, arg0.y/zoomRatio);
-					if(lblNewLabel32.getText().length() == 0){		
-						lblNewLabel32.setText(String.valueOf(x)); lblNewLabel33.setText(String.valueOf(y));
+
+					int x= (int) Math.min(savedImages[selectedImageNumber].getBounds().width-1,(double) (arg0.x)/zoomRatio);
+					int y= (int) Math.min(savedImages[selectedImageNumber].getBounds().height-1,(double) (arg0.y)/zoomRatio);
+					if(scanULx.getText().length() == 0){		
+						scanULx.setText(String.valueOf(x)); scanULy.setText(String.valueOf(y));
 						scanPointsX[0] = x; scanPointsY[0] = y;
+						gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
 						return;
 					}
-					if(lblNewLabel42.getText().length() == 0){
-						lblNewLabel42.setText(String.valueOf(x)); lblNewLabel43.setText(String.valueOf(y));
+					if(scanURx.getText().length() == 0){
+						scanURx.setText(String.valueOf(x)); scanURy.setText(String.valueOf(y));
 						scanPointsX[1] = x; scanPointsY[1] = y;
+						gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
 						return;
 					}
-					if(lblNewLabel52.getText().length() == 0){
-						lblNewLabel52.setText(String.valueOf(x)); lblNewLabel53.setText(String.valueOf(y));
+					if(scanLLx.getText().length() == 0){
+						scanLLx.setText(String.valueOf(x)); scanLLy.setText(String.valueOf(y));
 						scanPointsX[2] = x; scanPointsY[2] = y;
+						gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
 						return;
 					}
-					if(lblNewLabel62.getText().length() == 0){
-						lblNewLabel62.setText(String.valueOf(x)); lblNewLabel63.setText(String.valueOf(y));
+					if(scanLRx.getText().length() == 0){
+						scanLRx.setText(String.valueOf(x)); scanLRy.setText(String.valueOf(y));
 						scanPointsX[3] = x; scanPointsY[3] = y;
+						gc.fillOval(arg0.x-5, arg0.y-5, 10, 10);
 					}
 					for(int i=0; i<4; i++){
 						for(int j=0; j<4; j++){
 							if(i!=j){
 								if(Math.pow(scanPointsX[j]-scanPointsX[i],2)+Math.pow(scanPointsY[j]-scanPointsY[i],2)==0){
 									showWarningMessage("All four points must be distinct");
-									refreshDisplay();
-									lblNewLabel32.setText(""); lblNewLabel33.setText("");
-									lblNewLabel42.setText(""); lblNewLabel43.setText("");
-									lblNewLabel52.setText(""); lblNewLabel53.setText("");
-									lblNewLabel62.setText(""); lblNewLabel63.setText("");
+									clearScan();
 									return;
 								}
 							}
@@ -821,7 +828,7 @@ public class GUI extends Composite  {
 
 			Label lblNewLabel7 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel7.setText("Number of triangles");
-			
+
 			final Spinner triangles = new Spinner(optionsGroup, SWT.BORDER);
 			triangles.setSelection(nbTriangles);
 			triangles.setMaximum(1000);
@@ -834,7 +841,7 @@ public class GUI extends Composite  {
 
 			Label lblNewLabel8 = new Label(optionsGroup, SWT.NONE);
 			lblNewLabel8.setText("Number of circles");
-			
+
 			final Spinner circles = new Spinner(optionsGroup, SWT.BORDER);
 			circles.setSelection(nbCircles);
 			circles.setMaximum(1000);
@@ -881,6 +888,18 @@ public class GUI extends Composite  {
 	}
 
 	/**
+	 *  Reinitialise le menu de Scan
+	 */
+	void clearScan() {
+		refreshDisplay();
+		scanULx.setText("");scanULy.setText("");
+		scanURx.setText("");scanURy.setText("");
+		scanLLx.setText("");scanLLy.setText("");
+		scanLRx.setText("");scanLRy.setText("");
+		btnApply.setEnabled(false);
+	}
+
+	/**
 	 * Lance un traitement pour la fonction selectionnee. Un seul traitement peut avoir lieu simultanement sur un meme
 	 * ordinateur.
 	 */
@@ -912,6 +931,7 @@ public class GUI extends Composite  {
 	void refreshDisplay(){
 
 		if(savedImages == null) return;
+		if(image != null) image.dispose();  //liberation ressources
 
 		imageNumber.setText((selectedImageNumber+1)+"/"+savedImages.length);
 		titleLabel.setText(fileNames[selectedImageNumber].substring(fileNames[selectedImageNumber].lastIndexOf('/') + 1));
@@ -925,9 +945,9 @@ public class GUI extends Composite  {
 
 		zoomRatio = Math.min(xratio, yratio);
 		zoomLabel.setText(("Zoom: "+(int) (zoomRatio*100)+"%")+"\n"+"Original size: "+imgWidth+"*"+imgHeight);	
-		
+
 		image = ImageUtilities.resize(img, (int)(img.getBounds().width*zoomRatio), (int)(img.getBounds().height*zoomRatio));
-		
+
 		if(gc == null || gc.isDisposed()) gc = new GC(imageFrame);
 		gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
 		gc.fillRectangle(imageFrame.getClientArea());
@@ -950,6 +970,7 @@ public class GUI extends Composite  {
 	 */
 	void updateImage(Image img, int number){
 		if(savedImages != null){
+			savedImages[number].dispose();  //liberation ressources
 			savedImages[number] = img;
 		}
 	}
@@ -1047,6 +1068,5 @@ public class GUI extends Composite  {
 		if(updater != null && updater.isAlive()) updater.interrupt();
 
 		display.dispose();
-		//	System.exit(0);
 	}
 }

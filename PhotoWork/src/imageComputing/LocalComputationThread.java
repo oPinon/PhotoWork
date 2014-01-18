@@ -115,7 +115,6 @@ public class LocalComputationThread extends Thread implements ComputationThread 
 			int formatIndex = parameters[9];
 
 			output = Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, streamBuffer);
-
 			break;
 
 		case GA_PAINTER:
@@ -149,6 +148,6 @@ public class LocalComputationThread extends Thread implements ComputationThread 
 			break;
 		}
 
-		streamBuffer.put(new Result(output.getImage(), imageNumber, 100));	
+		streamBuffer.put( new Result(output.getImage(), imageNumber, 100) );	
 	}
 }

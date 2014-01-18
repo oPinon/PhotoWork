@@ -26,7 +26,7 @@ import filter.ImageFunction;
 import gAPainter.PainterMaster;
 
 /**
- * Cette classe sert d'interface entre le GUI et les clients, en transmettant les donnees � traiter aux clients et 
+ * Cette classe sert d'interface entre le GUI et les clients, en transmettant les donnees a traiter aux clients et 
  * en mettant a jour le GUI a partir des donnees recues.
  *
  */
@@ -179,18 +179,20 @@ public class DisplayUpdater extends Thread {
 				do{
 					Result r = tasksDone.take();
 
-					output  = new PImage(r.getResult()).getImage(); //necessaire, sinon convertToSWT ne marche pas
+					output  = new PImage(r.getImage()).getImage(); //necessaire, sinon convertToSWT ne marche pas
 					number = r.getImageNumber();
 					progress = r.getProgress();
-					convertedOutput = new Image(g.getDisplay(), ImageUtilities.convertToSWT(output));
+
+					if(output.getWidth() > 1){  //pour GAPainter et les images finies
+						convertedOutput = new Image(g.getDisplay(), ImageUtilities.convertToSWT(output));
+					}
 
 					g.getDisplay().syncExec(new Runnable() {
 						public void run() {
 							try{
-								if(output.getWidth() == 1){	
+								if(selectedFunction != ImageFunction.GA_PAINTER){	
 									g.setLocalProgressBarSelection(progress);  //images hors GAPainter
 								}
-
 								else{   //pour GA Painter, qui envoie des images non entierement traitees					
 									g.updateImage(convertedOutput, number);
 									g.refreshDisplay();
@@ -199,7 +201,6 @@ public class DisplayUpdater extends Thread {
 							} catch(SWTException e){}
 						}
 					});	
-
 
 				} while(progress != 100);
 
@@ -217,9 +218,6 @@ public class DisplayUpdater extends Thread {
 						} catch(SWTException e){}
 					}
 				});	
-
-
-
 			}
 
 			final long t2 = System.currentTimeMillis();
@@ -230,7 +228,8 @@ public class DisplayUpdater extends Thread {
 						g.refreshDisplay();
 						g.print("\n"+selectedFunction.getName()+" finished",false);
 						g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
-						if(selectedFunction == ImageFunction.SCAN) g.createOptionsMenu(); //pour eviter d'effectuer deux scans a la suite
+						if(selectedFunction == ImageFunction.SCAN) g.clearScan(); 
+						//pour eviter d'effectuer deux scans a la suite
 					} catch(SWTException e){}
 				}
 			});	

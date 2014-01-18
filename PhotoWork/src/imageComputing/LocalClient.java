@@ -32,12 +32,12 @@ public class LocalClient extends Thread implements Client{
 			try {
 				sendImage();
 				receiveImage();
-			} catch (InterruptedException e) {;
-			System.out.println("client local["+id+"]: termine");
-			endConnection();
-			break;
+			} catch (InterruptedException e) {
+				System.out.println("client local["+id+"]: termine");
+				break;
 			}
 		}
+		endConnection();
 	}
 
 	public void sendImage() throws InterruptedException{

@@ -62,7 +62,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 		PImage output= new PImage(0,0);	
 		fromClient.skip(16); //on saute deux octets a la fin de l'image, dus au format png
 
-		ImageFunction function = ImageFunction.fromName(fromClient.readUTF());
+		ImageFunction function = ImageFunction.valueOf(fromClient.readUTF());
 		int imageNumber = fromClient.readInt();	
 
 		streamBuffer = new Buffer<Result>();
@@ -149,7 +149,6 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 			int formatIndex = fromClient.readInt();
 
 			output = Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, streamBuffer);
-
 			break;
 
 		case GA_PAINTER:
