@@ -26,7 +26,7 @@ public class PainterSlave implements ActionListener {
 		painter.start(); // painter is the computation thread while PainterSlave is the imageComputing thread
 		t = new Timer(1000,this);
 		t.start();
-		System.out.println("PainterSlave: creation");
+		System.out.println("painterSlave: created");
 	}
 
 	public long getFitness() {
@@ -62,7 +62,7 @@ public class PainterSlave implements ActionListener {
 		catch (IOException c) {
 			painter.interrupt();
 			t.stop();
-			System.out.println("PainterSlave: fin de connection");
+			System.out.println("painterSlave: end of connection");
 		}
 	}
 }

@@ -227,7 +227,6 @@ public class GUI extends Composite  {
 				FileBrowser browser= new FileBrowser(display, SWT.SAVE);
 
 				if(browser.chosenFiles[0] != null){
-					System.out.println(browser.chosenFiles[0]);
 					String name= browser.chosenFiles[0];
 					ImageLoader loader = new ImageLoader();
 
@@ -1051,6 +1050,17 @@ public class GUI extends Composite  {
 		shell.setMinimumSize(1000,560); 
 
 		openShell(shell);
+		System.out.println("PhotoWorks opened");
+		
+		shell.addListener(SWT.Close, new Listener() {
+			public void handleEvent(Event event) {
+				System.out.println("PhotoWorks closing");
+				server.closeSocket();
+				if(updater != null && updater.isAlive()) updater.interrupt();
+
+				display.dispose();
+			}
+		});
 
 		// run the event loop as long as the window is open
 		while (!g.isDisposed()) {
@@ -1063,10 +1073,6 @@ public class GUI extends Composite  {
 			}
 		}
 		// disposes all associated windows and their display
-		System.out.println("PhotoWorks closing");
-		server.closeSocket();
-		if(updater != null && updater.isAlive()) updater.interrupt();
 
-		display.dispose();
 	}
 }

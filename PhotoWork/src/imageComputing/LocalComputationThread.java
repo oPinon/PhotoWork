@@ -33,9 +33,9 @@ public class LocalComputationThread extends Thread implements ComputationThread 
 
 	public void run() {
 		try {
-			System.out.println("computationThread: pret a traiter");
+			System.out.println("computationThread: ready");
 			computeImage();
-			System.out.println("computationThread: image traitee et renvoyee");
+			System.out.println("computationThread: image computed and sent back");
 
 		} catch (InterruptedException e) {
 			System.err.println("computationThread: interrupted");
@@ -135,7 +135,7 @@ public class LocalComputationThread extends Thread implements ComputationThread 
 						try {
 							streamBuffer.put(new Result(result, imageNumber, painter.getFitness()));
 						} catch (InterruptedException e) {
-							System.out.println("painter: fin");
+							System.out.println("painter: closing");
 							painter.interrupt();
 							t.cancel();
 						}	

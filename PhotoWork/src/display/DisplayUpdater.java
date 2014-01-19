@@ -19,6 +19,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import pImage.PImage;
@@ -104,13 +105,15 @@ public class DisplayUpdater extends Thread {
 			tasksDone = new Buffer<Result>();		
 			createClients();
 
-			g.getDisplay().syncExec(new Runnable() {  //necessaire car on met a jour le GUI depuis un thread externe
+			Display.getDefault().syncExec(new Runnable() {  //necessaire car on met a jour le GUI depuis un thread externe
 				public void run() {
 					try{
 						g.setGlobalProgressBarSelection(0);
 						g.btnApply.setText("Busy...");
 						g.btnApply.setBackground(SWTResourceManager.getColor(GUI.UNDO_COLOR));
-					} catch(SWTException e){}
+					} catch(SWTException e){
+						System.err.println("displayUpdater: GUI closed");
+					}
 				}
 			});	
 
@@ -149,7 +152,7 @@ public class DisplayUpdater extends Thread {
 				case GA_PAINTER:
 					task = new Task(input, selectedFunction, count, new int[]{nbCircles, nbTriangles});
 
-					g.getDisplay().syncExec(new Runnable() {
+					Display.getDefault().syncExec(new Runnable() {
 						public void run() {
 							g.btnStop.addSelectionListener(new SelectionAdapter() {
 								public void widgetSelected(SelectionEvent arg0) {
@@ -158,7 +161,9 @@ public class DisplayUpdater extends Thread {
 										for(Client c: clients) c.interrupt();
 										g.btnApply.setText("Apply !");
 										g.btnApply.setBackground(SWTResourceManager.getColor(GUI.APPLY_COLOR));
-									} catch(SWTException e){}
+									} catch(SWTException e){
+										System.err.println("displayUpdater: GUI closed");
+									}
 								}
 							});
 						}
@@ -184,10 +189,10 @@ public class DisplayUpdater extends Thread {
 					progress = r.getProgress();
 
 					if(output.getWidth() > 1){  //pour GAPainter et les images finies
-						convertedOutput = new Image(g.getDisplay(), ImageUtilities.convertToSWT(output));
+						convertedOutput = new Image(Display.getDefault(), ImageUtilities.convertToSWT(output));
 					}
 
-					g.getDisplay().syncExec(new Runnable() {
+					Display.getDefault().syncExec(new Runnable() {
 						public void run() {
 							try{
 								if(selectedFunction != ImageFunction.GA_PAINTER){	
@@ -198,13 +203,15 @@ public class DisplayUpdater extends Thread {
 									g.refreshDisplay();
 									g.print("GAPainter fitness: "+(int) progress, true);
 								}
-							} catch(SWTException e){}
+							} catch(SWTException e){
+								System.err.println("displayUpdater: GUI closed");
+							}
 						}
 					});	
 
 				} while(progress != 100);
 
-				g.getDisplay().syncExec(new Runnable() {
+				Display.getDefault().syncExec(new Runnable() {
 					public void run() {
 						try{
 							if(output.getWidth()>1){ 
@@ -214,41 +221,46 @@ public class DisplayUpdater extends Thread {
 								g.setLocalProgressBarSelection(100);
 							}
 							else g.setLocalProgressBarSelection(progress);
-
-						} catch(SWTException e){}
+						} catch(SWTException e){
+							System.err.println("displayUpdater: GUI closed");
+						}
 					}
 				});	
 			}
 
 			final long t2 = System.currentTimeMillis();
 
-			g.getDisplay().syncExec(new Runnable() {
-				public void run() {
+			Display.getDefault().syncExec(new Runnable() {
+				public void run(){
 					try{
 						g.refreshDisplay();
 						g.print("\n"+selectedFunction.getName()+" finished",false);
 						g.print("\n"+"Time spent: "+((t2-t1)/1000.0)+" second(s)",false);
 						if(selectedFunction == ImageFunction.SCAN) g.clearScan(); 
 						//pour eviter d'effectuer deux scans a la suite
-					} catch(SWTException e){}
+					} catch(SWTException e){
+						System.err.println("displayUpdater: GUI closed");
+					}
 				}
 			});	
 
 
 		} catch (InterruptedException e) {
-			System.err.println("DisplayUpdater: interruption");
+			System.err.println("displayUpdater: interrupted");
 		} catch (UnknownHostException e1) {
-			e1.printStackTrace();
+			System.err.println("displayUpdater: unknown host");
 		} finally{
 			for(Client c: clients) c.interrupt(); //arret des Clients
 
 			if(!g.isDisposed()){
-				g.getDisplay().syncExec(new Runnable() {
+				Display.getDefault().syncExec(new Runnable() {
 					public void run() {
 						try{
 							g.btnApply.setText("Apply !");
 							g.btnApply.setBackground(SWTResourceManager.getColor(GUI.APPLY_COLOR));
-						} catch(SWTException e){}
+						} catch(SWTException e){
+							System.err.println("displayUpdater: GUI closed");
+						}
 					}
 				});	
 			}
@@ -271,7 +283,7 @@ public class DisplayUpdater extends Thread {
 			if(!ip.equals(localIP)){   //dans ce cas on passe en mode reseau
 				if(selectedFunction != ImageFunction.GA_PAINTER){
 					for(String ip1: IPList){
-						System.out.println("MODE RESEAU");
+						System.out.println("NETWORK MODE");
 						NetworkClient nc = new NetworkClient(ip1, tasksToDo, tasksDone);
 						clients.add(nc);
 						nc.start();
@@ -280,7 +292,7 @@ public class DisplayUpdater extends Thread {
 				} 
 
 				else{      //client particulier pour GA Painter
-					System.out.println("MODE RESEAU - GA PAINTER");
+					System.out.println("NETWORK MODE - GA PAINTER");
 					PainterMaster pMaster = new PainterMaster(IPList, tasksToDo, tasksDone);
 					clients.add(pMaster);
 					pMaster.start();
@@ -290,7 +302,7 @@ public class DisplayUpdater extends Thread {
 		}	
 
 		//si toutes les IP sont identiques on passe en mode local
-		System.out.println("MODE LOCAL");
+		System.out.println("LOCAL MODE");
 		for(int i=0; i<nbThreads; i++){
 			LocalClient lc = new LocalClient(tasksToDo, tasksDone, i);
 			clients.add(lc);

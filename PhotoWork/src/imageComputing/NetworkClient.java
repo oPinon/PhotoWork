@@ -29,7 +29,7 @@ public class NetworkClient extends Thread implements Client{
 		this.tasksDone = tasksDone;	
 		this.ip = ip;
 
-		System.out.println("client "+ip+": client cree");	
+		System.out.println("client "+ip+": created");	
 	}
 
 	public void run(){
@@ -38,7 +38,7 @@ public class NetworkClient extends Thread implements Client{
 				sendImage();
 				receiveImage();
 			} catch (IOException | InterruptedException e) {
-				System.out.println("client "+ip+": fin de connection");
+				System.out.println("client "+ip+": end of connection");
 				break;
 			}
 		}
@@ -50,8 +50,7 @@ public class NetworkClient extends Thread implements Client{
 		newConnection();	
 		toSend.sendToStream(toServer);
 
-
-		System.out.println("client "+ip+": image "+(toSend.getImageNumber()+1)+" envoyee");
+		System.out.println("client "+ip+": image "+(toSend.getImageNumber()+1)+" sent");
 	}
 
 	public void receiveImage() throws IOException, InterruptedException{
@@ -71,7 +70,7 @@ public class NetworkClient extends Thread implements Client{
 
 
 		DisplayUpdater.incrementTasks();
-		System.out.println("client "+ip+": image "+(imageNumber+1)+" recue");
+		System.out.println("client "+ip+": image "+(imageNumber+1)+" received");
 	}
 
 	public void newConnection(){
@@ -80,7 +79,7 @@ public class NetworkClient extends Thread implements Client{
 			fromServer = new DataInputStream(socket.getInputStream());
 			toServer = new DataOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
-			System.err.println("client "+ip+": erreur lors de la connection");
+			System.err.println("client "+ip+": error while connecting");
 			interrupt();
 		}
 	}

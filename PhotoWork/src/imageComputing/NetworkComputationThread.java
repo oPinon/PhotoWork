@@ -29,7 +29,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 	private DataInputStream fromClient;
 	private DataOutputStream toClient;
 
-	private Buffer<Result> streamBuffer;
+	private Buffer<Result> temporaryBuffer;
 	private Thread senderThread;
 
 	NetworkComputationThread(Socket socket) {
@@ -38,12 +38,11 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 
 	public void run() {
 		try {
-			System.out.println("computationThread: pret a traiter");
+			System.out.println("computationThread: ready");
 			computeImage();
-			System.out.println("computationThread: image traitee et renvoyee");
 
 		} catch (IOException | InterruptedException e) {
-			System.err.println("computationThread: I/O Error");
+			System.err.println("computationThread: I/O error");
 		}
 	}
 
@@ -54,7 +53,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 
 		BufferedImage b = ImageIO.read(fromClient);
 		if(b == null) {										//pour les tests de connection du menu Preferences
-			System.out.println("computationThread: test connection OK");
+			System.out.println("computationThread: connection test OK");
 			return; 
 		}
 		PImage input = new PImage(b);
@@ -65,7 +64,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 		ImageFunction function = ImageFunction.valueOf(fromClient.readUTF());
 		int imageNumber = fromClient.readInt();	
 
-		streamBuffer = new Buffer<Result>();
+		temporaryBuffer = new Buffer<Result>();
 
 		if(function != ImageFunction.GA_PAINTER){   
 			//ce Thread envoie les images intermediaires au Client (barre de progression)
@@ -74,9 +73,11 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 					Result r = null;
 					do{
 						try {
-							r = streamBuffer.take();
+							r = temporaryBuffer.take();
 							r.sendToStream(toClient);
 						} catch (IOException | InterruptedException e) {
+							System.err.println("computationThread: senderThread interrupted");
+							temporaryBuffer.close();
 							break;
 						}
 					}
@@ -93,24 +94,24 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 			int blurSize = fromClient.readInt();
 
 			switch(type){
-			case 0: output = AutoBalance.balance(input, nbThreads, streamBuffer);     break;
-			case 1: output = AutoBalance.balanceColors(input, streamBuffer);		   break;	
-			case 2: output = AutoBalance.balanceColors(input, blurSize, streamBuffer); break;
+			case 0: output = AutoBalance.balance(input, nbThreads, temporaryBuffer);     break;
+			case 1: output = AutoBalance.balanceColors(input, temporaryBuffer);		   break;	
+			case 2: output = AutoBalance.balanceColors(input, blurSize, temporaryBuffer); break;
 			}
 			break;
 
 		case BLUR:
 			int blurSize2 = fromClient.readInt();
 
-			output= BlurFilter.blur(input, blurSize2, streamBuffer);
+			output= BlurFilter.blur(input, blurSize2, temporaryBuffer);
 			break;
 
 		case HDR_EQUALIZER:
 			int algorithm = fromClient.readInt();
 			int blurSize3 = fromClient.readInt();
 
-			if(algorithm == 0) output = HDREqualizer.filter(input, blurSize3, streamBuffer);
-			else output = HDREqualizer.filter2(input, blurSize3, streamBuffer);
+			if(algorithm == 0) output = HDREqualizer.filter(input, blurSize3, temporaryBuffer);
+			else output = HDREqualizer.filter2(input, blurSize3, temporaryBuffer);
 
 			output = AutoBalance.balanceColors(output, null);
 
@@ -130,7 +131,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 			PImage img = new PImage(source);
 
 			//does a Fourier Transform to create the image's spectrum
-			ImageSpectrum spectrum = new ImageSpectrum(img, streamBuffer);
+			ImageSpectrum spectrum = new ImageSpectrum(img, temporaryBuffer);
 
 			if(isHighPassFilterOn == 0){
 				output = spectrum.getTransform(isScalingLog == 1);
@@ -148,7 +149,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 			int[] scanPointsY = {fromClient.readInt(),fromClient.readInt(),fromClient.readInt(),fromClient.readInt()};
 			int formatIndex = fromClient.readInt();
 
-			output = Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, streamBuffer);
+			output = Scanner.scan(input, scanPointsX, scanPointsY, formatIndex, nbThreads2, temporaryBuffer);
 			break;
 
 		case GA_PAINTER:
@@ -163,6 +164,7 @@ public class NetworkComputationThread extends Thread implements ComputationThrea
 			break;
 		}
 
-		streamBuffer.put( new Result(output.getImage(), imageNumber, 100) );
+		temporaryBuffer.put( new Result(output.getImage(), imageNumber, 100) );
+		System.out.println("computationThread: image computed and sent back");
 	}
 }

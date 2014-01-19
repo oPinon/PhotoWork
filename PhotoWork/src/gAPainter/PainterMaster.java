@@ -39,7 +39,7 @@ public class PainterMaster extends Thread implements Client{
 		outputs = new DataOutputStream[IPList.length];
 		inputs = new DataInputStream[IPList.length];	
 
-		System.out.println("PainterMaster cree");
+		System.out.println("painterMaster created");
 	}
 
 
@@ -57,8 +57,9 @@ public class PainterMaster extends Thread implements Client{
 				sendImage();
 				receiveImage();
 			}
-		} catch (IOException | InterruptedException e) {}
-		System.out.println("PainterMaster: fin de connection");
+		} catch (IOException | InterruptedException e) {
+			System.out.println("painterMaster: end of connection");
+		}
 		endConnection();
 	}
 

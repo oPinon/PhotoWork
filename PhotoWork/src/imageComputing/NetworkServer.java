@@ -15,11 +15,11 @@ public class NetworkServer extends Thread{
 	public NetworkServer() throws BindException {
 		try {
 			socket = new ServerSocket(6789);
-			System.out.println("serveur: creation sur cet ordinateur");
+			System.out.println("server: created on this computer");
 		} catch (BindException e) {
 			throw e;
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("server: I/O error");
 		}
 	}
 
@@ -28,7 +28,7 @@ public class NetworkServer extends Thread{
 			try {
 				new NetworkComputationThread(socket.accept()).start();
 			} catch (IOException e) {
-				System.out.println("serveur: fin de connection");
+				System.out.println("server: end of connection");
 				return;
 			}
 		}
@@ -38,7 +38,7 @@ public class NetworkServer extends Thread{
 		try {
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("server: error while closing the socket");
 		}
 	}
 }

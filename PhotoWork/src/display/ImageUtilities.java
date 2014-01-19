@@ -128,6 +128,14 @@ public class ImageUtilities {
 		return null;
 	}
 
+	/**
+	 * Redimensionne l'image en parametre aux dimensions souhaitees
+	 * 
+	 * @param image
+	 * @param width
+	 * @param height
+	 * @return l'image redimensionnee
+	 */
 	public static Image resize(Image image, int width, int height) {
 		Image scaled = new Image(Display.getDefault(), width, height);
 		GC gc = new GC(scaled);
