@@ -318,7 +318,7 @@ public class GUI extends Composite  {
 		btnABHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnABHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/autoBalance.png"));
+				showHelpMessage(new Image(display,"images/AutoBalanceHelp.png"));
 			}
 		});
 
@@ -342,7 +342,7 @@ public class GUI extends Composite  {
 		btnBlurHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnBlurHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/blur.png"));
+				showHelpMessage(new Image(display,"images/BlurHelp.png"));
 			}
 		});
 
@@ -366,7 +366,7 @@ public class GUI extends Composite  {
 		btnHDRHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnHDRHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/hdr.png"));
+				showHelpMessage(new Image(display,"images/HDRHelp.png"));
 			}
 		});
 
@@ -390,7 +390,7 @@ public class GUI extends Composite  {
 		btnDFTHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnDFTHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/DFT.png"));
+				showHelpMessage(new Image(display,"images/DFTHelp.png"));
 			}
 		});
 
@@ -421,7 +421,7 @@ public class GUI extends Composite  {
 		btnScanHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnScanHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/scanner.png"));
+				showHelpMessage(new Image(display,"images/ScanHelp.png"));
 			}
 		});
 
@@ -445,7 +445,7 @@ public class GUI extends Composite  {
 		btnGAHelp.setBackground(SWTResourceManager.getColor(HELP_COLOR));
 		btnGAHelp.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent arg0) {
-				showHelpMessage(new Image(display,"images/GA.png"));
+				showHelpMessage(new Image(display,"images/GAPainterHelp.png"));
 			}
 		});
 
@@ -1004,7 +1004,7 @@ public class GUI extends Composite  {
 
 		helpShell.setText("Help");	
 		helpShell.setLayout(new FillLayout());
-		helpShell.setSize(description.getBounds().width,description.getBounds().height); 
+		helpShell.setSize(description.getBounds().width,description.getBounds().height+20); 
 
 		Label l= new Label(helpShell, SWT.NONE);
 		l.setImage(description);

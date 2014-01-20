@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Buffer<T> {
 
 	private BlockingQueue<T> tampon;
-	//originellement une LinkedList, mais modifiee suite a des problemes de non synchronisation 
+	//originellement une LinkedList, mais modifiee suite a des NoSuchElementException
 	//occasionnels malgre les Semaphores.
 	
 

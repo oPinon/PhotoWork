@@ -184,7 +184,8 @@ public class DisplayUpdater extends Thread {
 				do{
 					Result r = tasksDone.take();
 
-					output  = new PImage(r.getImage()).getImage(); //necessaire, sinon convertToSWT ne marche pas
+					output  = new PImage(r.getImage()).getImage(); 
+					//necessaire pour le reseau, sinon convertToSWT ne marche pas
 					number = r.getImageNumber();
 					progress = r.getProgress();
 
@@ -214,13 +215,10 @@ public class DisplayUpdater extends Thread {
 				Display.getDefault().syncExec(new Runnable() {
 					public void run() {
 						try{
-							if(output.getWidth()>1){ 
-								g.updateImage(convertedOutput, number);
-								g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
-								g.setGlobalProgressBarSelection(tasksCompleted.intValue()*100/imagesToModify.length);
-								g.setLocalProgressBarSelection(100);
-							}
-							else g.setLocalProgressBarSelection(progress);
+							g.updateImage(convertedOutput, number);
+							g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
+							g.setGlobalProgressBarSelection(tasksCompleted.intValue()*100/imagesToModify.length);
+							g.setLocalProgressBarSelection(100);
 						} catch(SWTException e){
 							System.err.println("displayUpdater: GUI closed");
 						}
