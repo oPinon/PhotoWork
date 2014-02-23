@@ -47,7 +47,7 @@ public class LocalClient extends Thread implements Client{
 		System.out.println("local client["+id+"]: image "+(toSend.getImageNumber()+1)+" sent");
 	}
 
-	public void receiveImage() throws InterruptedException{
+	public synchronized void receiveImage() throws InterruptedException{
 		int imageNumber;
 		double progress;
 
@@ -59,7 +59,7 @@ public class LocalClient extends Thread implements Client{
 		}
 		while(progress != 100);  //image en cours de traitement
 
-		DisplayUpdater.incrementTasks();
+
 		System.out.println("local client["+id+"]: image "+(imageNumber+1)+" received");
 	}
 

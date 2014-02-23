@@ -1,5 +1,9 @@
 package filter;
 
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 import imageComputing.Buffer;
 import imageComputing.Result;
 import pImage.PColor;
@@ -69,7 +73,7 @@ public class AutoBalance {
 		int width = img.width(); int height = img.height();
 		PImage toReturn = new PImage(width, height);
 		PImage blurred = BlurFilter.blur(img, blurSize, null);
-		
+
 		int minR = Integer.MAX_VALUE; int maxR = Integer.MIN_VALUE;
 		int minG = Integer.MAX_VALUE; int maxG = Integer.MIN_VALUE;
 		int minB = Integer.MAX_VALUE; int maxB = Integer.MIN_VALUE;

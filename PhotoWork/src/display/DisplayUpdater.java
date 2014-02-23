@@ -8,11 +8,14 @@ import imageComputing.Result;
 import imageComputing.Task;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.imageio.ImageIO;
 
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -60,7 +63,7 @@ public class DisplayUpdater extends Thread {
 	private Buffer<Task> tasksToDo;
 	private Buffer<Result> tasksDone;
 
-	public static AtomicInteger tasksCompleted;
+	public int tasksCompleted;
 
 
 	public DisplayUpdater(GUI g) {
@@ -100,7 +103,6 @@ public class DisplayUpdater extends Thread {
 				imagesToModify[0] = savedImages[count];
 			}
 
-			tasksCompleted = new AtomicInteger(0);
 			tasksToDo = new Buffer<Task>();
 			tasksDone = new Buffer<Result>();		
 			createClients();
@@ -179,12 +181,13 @@ public class DisplayUpdater extends Thread {
 			}
 
 			//Reception
-			while(tasksCompleted.intValue() < imagesToModify.length){
+			while(tasksCompleted < imagesToModify.length){
 
 				do{
 					Result r = tasksDone.take();
 
 					output  = new PImage(r.getImage()).getImage(); 
+
 					//necessaire pour le reseau, sinon convertToSWT ne marche pas
 					number = r.getImageNumber();
 					progress = r.getProgress();
@@ -216,8 +219,9 @@ public class DisplayUpdater extends Thread {
 					public void run() {
 						try{
 							g.updateImage(convertedOutput, number);
+							tasksCompleted++;
 							g.print("\n"+selectedFunction.getName()+" done for image "+(number+1), false);
-							g.setGlobalProgressBarSelection(tasksCompleted.intValue()*100/imagesToModify.length);
+							g.setGlobalProgressBarSelection(tasksCompleted*100/imagesToModify.length);
 							g.setLocalProgressBarSelection(100);
 						} catch(SWTException e){
 							System.err.println("displayUpdater: GUI closed");
@@ -306,10 +310,6 @@ public class DisplayUpdater extends Thread {
 			clients.add(lc);
 			lc.start();
 		}
-	}
-
-	public static void incrementTasks(){
-		tasksCompleted.getAndIncrement();
 	}
 
 }

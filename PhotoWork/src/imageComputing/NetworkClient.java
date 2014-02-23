@@ -68,8 +68,6 @@ public class NetworkClient extends Thread implements Client{
 		}
 		while(progress != 100);  //image en cours de traitement
 
-
-		DisplayUpdater.incrementTasks();
 		System.out.println("client "+ip+": image "+(imageNumber+1)+" received");
 	}
 
